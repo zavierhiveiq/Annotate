@@ -57,7 +57,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSPopoverD
         setupOverlayWindows()
 
         let persistedFadeMode =
-            userDefaults.object(forKey: UserDefaults.fadeModeKey) as? Bool ?? true
+            userDefaults.object(forKey: UserDefaults.fadeModeKey) as? Bool ?? false
         overlayWindows.values.forEach { $0.overlayView.fadeMode = persistedFadeMode }
 
         let shouldStartInAlwaysOnMode = userDefaults.bool(forKey: UserDefaults.alwaysOnModeKey)
@@ -257,7 +257,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSPopoverD
             menu.addItem(NSMenuItem.separator())
 
             let persistedFadeMode =
-                userDefaults.object(forKey: UserDefaults.fadeModeKey) as? Bool ?? true
+                userDefaults.object(forKey: UserDefaults.fadeModeKey) as? Bool ?? false
             let currentDrawingModeItem = NSMenuItem(
                 title: persistedFadeMode ? "Drawing Mode: Fade" : "Drawing Mode: Persist",
                 action: nil,
@@ -671,7 +671,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSPopoverD
         overlayWindow.ignoresMouseEvents = false
         overlayWindow.overlayView.isReadOnlyMode = false
 
-        let persistedFadeMode = userDefaults.object(forKey: UserDefaults.fadeModeKey) as? Bool ?? true
+        let persistedFadeMode = userDefaults.object(forKey: UserDefaults.fadeModeKey) as? Bool ?? false
         overlayWindow.overlayView.fadeMode = persistedFadeMode
     }
 
