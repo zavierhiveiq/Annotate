@@ -2,7 +2,7 @@ name: Annotate
 options:
   bundleIdPrefix: com.epilande
   deploymentTarget:
-    macOS: "15.2"
+    macOS: "14.0"
   
 targets:
   Annotate:
@@ -12,6 +12,7 @@ targets:
       - Annotate
     dependencies:
       - package: KeyboardShortcuts
+      - package: Sparkle
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.epilande.Annotate
@@ -19,11 +20,11 @@ targets:
         CURRENT_PROJECT_VERSION: "1"
         CODE_SIGN_ENTITLEMENTS: Annotate/Annotate.entitlements
         SWIFT_VERSION: "5.0"
-        MACOSX_DEPLOYMENT_TARGET: "15.2"
-        INFOPLIST_KEY_LSApplicationCategoryType: "public.app-category.productivity"
+        MACOSX_DEPLOYMENT_TARGET: "14.0"
         ENABLE_HARDENED_RUNTIME: true
         COMBINE_HIDPI_IMAGES: true
-        GENERATE_INFOPLIST_FILE: true
+        GENERATE_INFOPLIST_FILE: false
+        INFOPLIST_FILE: Annotate/Info.plist
         ENABLE_PREVIEWS: true
         DEVELOPMENT_ASSET_PATHS: "\"Annotate/Preview Content\""
         
@@ -34,8 +35,14 @@ targets:
       - AnnotateTests
     dependencies:
       - target: Annotate
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: true
 
 packages:
   KeyboardShortcuts:
     url: https://github.com/sindresorhus/KeyboardShortcuts
     from: "2.2.4"
+  Sparkle:
+    url: https://github.com/sparkle-project/Sparkle
+    from: "2.8.0"

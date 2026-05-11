@@ -1,5 +1,6 @@
 import Carbon
 import Cocoa
+import Sparkle
 import SwiftUI
 
 @MainActor
@@ -8,44 +9,120 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSPopoverD
 
     var statusItem: NSStatusItem!
     var colorPopover: NSPopover?
+    var lineWidthPopover: NSPopover?
     var currentColor: NSColor = .systemRed
     var hotkeyMonitor: Any?
     var overlayWindows: [NSScreen: OverlayWindow] = [:]
     var settingsWindow: NSWindow?
+    var alwaysOnMode: Bool = false
+    var aboutWindow: NSWindow?
+    var updaterController: SPUStandardUpdaterController!
+    let userDefaults: UserDefaults
+
+    // Cursor Highlight
+    var cursorHighlightWindows: [NSScreen: CursorHighlightWindow] = [:]
+    var globalMouseMoveMonitor: Any?
+    var globalMouseClickMonitor: Any?
+    var globalMouseUpMonitor: Any?
+    var localMouseMoveMonitor: Any?
+    var localMouseClickMonitor: Any?
+    var localMouseUpMonitor: Any?
+    var localFlagsChangedMonitor: Any?
+
+    override init() {
+        self.userDefaults = .standard
+        super.init()
+    }
+
+    init(userDefaults: UserDefaults) {
+        self.userDefaults = userDefaults
+        super.init()
+    }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         AppDelegate.shared = self
         updateDockIconVisibility()
 
-        if let colorData = UserDefaults.standard.data(forKey: "SelectedColor"),
+        if let colorData = userDefaults.data(forKey: "SelectedColor"),
             let unarchivedColor = try? NSKeyedUnarchiver.unarchivedObject(
                 ofClass: NSColor.self, from: colorData)
         {
             currentColor = unarchivedColor
         }
 
+        // Sync annotation color to cursor highlight manager
+        CursorHighlightManager.shared.annotationColor = currentColor
+
         setupStatusBarItem()
         setupOverlayWindows()
 
         let persistedFadeMode =
-            UserDefaults.standard.object(forKey: UserDefaults.fadeModeKey) as? Bool ?? true
+            userDefaults.object(forKey: UserDefaults.fadeModeKey) as? Bool ?? true
         overlayWindows.values.forEach { $0.overlayView.fadeMode = persistedFadeMode }
 
-        let enableBoard = UserDefaults.standard.bool(forKey: UserDefaults.enableBoardKey)
+        let shouldStartInAlwaysOnMode = userDefaults.bool(forKey: UserDefaults.alwaysOnModeKey)
+        if shouldStartInAlwaysOnMode {
+            DispatchQueue.main.async {
+                self.toggleAlwaysOnMode()
+            }
+        }
+
+        let persistedLineWidth = userDefaults.object(forKey: UserDefaults.lineWidthKey) as? Double ?? 3.0
+        overlayWindows.values.forEach { $0.overlayView.currentLineWidth = CGFloat(persistedLineWidth) }
+
+        let enableBoard = userDefaults.bool(forKey: UserDefaults.enableBoardKey)
         overlayWindows.values.forEach {
             $0.boardView.isHidden = !enableBoard
             $0.overlayView.updateAdaptColors(boardEnabled: enableBoard)
         }
 
         setupBoardObservers()
+
+        #if DEBUG
+        let startUpdater = false
+        #else
+        let startUpdater = true
+        #endif
+
+        updaterController = SPUStandardUpdaterController(
+            startingUpdater: startUpdater,
+            updaterDelegate: nil,
+            userDriverDelegate: nil
+        )
+
+        setupApplicationMenu()
+
+        setupCursorHighlightWindows()
+        setupGlobalMouseMonitors()
+        setupCursorHighlightObservers()
+    }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        let monitors: [Any?] = [
+            globalMouseMoveMonitor,
+            globalMouseClickMonitor,
+            globalMouseUpMonitor,
+            localMouseMoveMonitor,
+            localMouseClickMonitor,
+            localMouseUpMonitor,
+            localFlagsChangedMonitor
+        ]
+        monitors.compactMap { $0 }.forEach { NSEvent.removeMonitor($0) }
+
+        globalMouseMoveMonitor = nil
+        globalMouseClickMonitor = nil
+        globalMouseUpMonitor = nil
+        localMouseMoveMonitor = nil
+        localMouseClickMonitor = nil
+        localMouseUpMonitor = nil
+        localFlagsChangedMonitor = nil
     }
 
     @MainActor
     func updateDockIconVisibility() {
-        // Skip NSApplication operations during testing
         guard NSApplication.shared.delegate != nil else { return }
 
-        if UserDefaults.standard.bool(forKey: UserDefaults.hideDockIconKey) {
+        if userDefaults.bool(forKey: UserDefaults.hideDockIconKey) {
             NSApplication.shared.setActivationPolicy(.accessory)
         } else {
             NSApplication.shared.setActivationPolicy(.regular)
@@ -68,6 +145,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSPopoverD
                 keyEquivalent: ShortcutManager.shared.getShortcut(for: .colorPicker))
             colorItem.keyEquivalentModifierMask = []
             menu.addItem(colorItem)
+
+            let lineWidthItem = NSMenuItem(
+                title: "Line Width",
+                action: #selector(showLineWidthPicker(_:)),
+                keyEquivalent: ShortcutManager.shared.getShortcut(for: .lineWidthPicker))
+            lineWidthItem.keyEquivalentModifierMask = []
+            menu.addItem(lineWidthItem)
 
             menu.addItem(NSMenuItem.separator())
 
@@ -134,13 +218,27 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSPopoverD
                 keyEquivalent: ShortcutManager.shared.getShortcut(for: .text))
             textModeItem.keyEquivalentModifierMask = []
             menu.addItem(textModeItem)
+            
+            let selectModeItem = NSMenuItem(
+                title: "Select",
+                action: #selector(enableSelectMode(_:)),
+                keyEquivalent: ShortcutManager.shared.getShortcut(for: .select))
+            selectModeItem.keyEquivalentModifierMask = []
+            menu.addItem(selectModeItem)
+
+            let eraserModeItem = NSMenuItem(
+                title: "Eraser",
+                action: #selector(enableEraserMode(_:)),
+                keyEquivalent: ShortcutManager.shared.getShortcut(for: .eraser))
+            eraserModeItem.keyEquivalentModifierMask = []
+            menu.addItem(eraserModeItem)
 
             menu.addItem(NSMenuItem.separator())
 
             let isDarkMode =
                 NSApp.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
             let boardType = isDarkMode ? "Blackboard" : "Whiteboard"
-            let boardEnabled = UserDefaults.standard.bool(forKey: UserDefaults.enableBoardKey)
+            let boardEnabled = userDefaults.bool(forKey: UserDefaults.enableBoardKey)
             let toggleBoardItem = NSMenuItem(
                 title: boardEnabled ? "Hide \(boardType)" : "Show \(boardType)",
                 action: #selector(toggleBoardVisibility(_:)),
@@ -148,12 +246,20 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSPopoverD
             toggleBoardItem.keyEquivalentModifierMask = []
             menu.addItem(toggleBoardItem)
 
+            let clickEffectsEnabled = CursorHighlightManager.shared.clickEffectsEnabled
+            let toggleClickEffectsItem = NSMenuItem(
+                title: clickEffectsEnabled ? "Disable Cursor Highlight" : "Enable Cursor Highlight",
+                action: #selector(toggleClickEffects(_:)),
+                keyEquivalent: ShortcutManager.shared.getShortcut(for: .toggleClickEffects))
+            toggleClickEffectsItem.keyEquivalentModifierMask = []
+            menu.addItem(toggleClickEffectsItem)
+
             menu.addItem(NSMenuItem.separator())
 
             let persistedFadeMode =
-                UserDefaults.standard.object(forKey: UserDefaults.fadeModeKey) as? Bool ?? true
+                userDefaults.object(forKey: UserDefaults.fadeModeKey) as? Bool ?? true
             let currentDrawingModeItem = NSMenuItem(
-                title: persistedFadeMode ? "Current Mode: Fade" : "Current Mode: Persist",
+                title: persistedFadeMode ? "Drawing Mode: Fade" : "Drawing Mode: Persist",
                 action: nil,
                 keyEquivalent: ""
             )
@@ -167,6 +273,23 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSPopoverD
             )
             toggleDrawingModeItem.keyEquivalentModifierMask = []
             menu.addItem(toggleDrawingModeItem)
+
+            menu.addItem(NSMenuItem.separator())
+            
+            let currentOverlayModeItem = NSMenuItem(
+                title: alwaysOnMode ? "Overlay Mode: Always-On" : "Overlay Mode: Interactive",
+                action: nil,
+                keyEquivalent: ""
+            )
+            currentOverlayModeItem.isEnabled = false
+            menu.addItem(currentOverlayModeItem)
+            
+            let toggleAlwaysOnModeItem = NSMenuItem(
+                title: alwaysOnMode ? "Exit Always-On Mode" : "Always-On Mode",
+                action: #selector(toggleAlwaysOnMode),
+                keyEquivalent: ""
+            )
+            menu.addItem(toggleAlwaysOnModeItem)
 
             menu.addItem(NSMenuItem.separator())
 
@@ -193,11 +316,17 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSPopoverD
             menu.addItem(NSMenuItem.separator())
 
             let settingsItem = NSMenuItem(
-                title: "Settings",
+                title: "Settings...",
                 action: #selector(showSettings),
                 keyEquivalent: ",")
             settingsItem.keyEquivalentModifierMask = [.command]
             menu.addItem(settingsItem)
+
+            let checkForUpdatesItem = NSMenuItem(
+                title: "Check for Updates...",
+                action: #selector(checkForUpdates),
+                keyEquivalent: "")
+            menu.addItem(checkForUpdatesItem)
 
             menu.addItem(NSMenuItem.separator())
 
@@ -232,9 +361,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSPopoverD
                     defer: false
                 )
                 overlayWindow.currentColor = currentColor
+
+                let savedLineWidth = userDefaults.object(forKey: UserDefaults.lineWidthKey) as? Double ?? 3.0
+                overlayWindow.overlayView.currentLineWidth = CGFloat(savedLineWidth)
+
                 overlayWindows[screen] = overlayWindow
             }
         }
+
+        updateCursorHighlightWindowsForScreenChange()
     }
 
     func getCurrentScreen() -> NSScreen? {
@@ -263,7 +398,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSPopoverD
     @objc func showColorPicker(_ sender: Any?) {
         if colorPopover == nil {
             colorPopover = NSPopover()
-            colorPopover?.contentViewController = ColorPickerViewController()
+            colorPopover?.contentViewController = ColorPickerViewController(userDefaults: userDefaults)
             colorPopover?.behavior = .transient
             colorPopover?.delegate = self
         }
@@ -277,11 +412,39 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSPopoverD
         }
     }
 
+    @objc func showLineWidthPicker(_ sender: Any?) {
+        if lineWidthPopover == nil {
+            lineWidthPopover = NSPopover()
+            lineWidthPopover?.contentViewController = LineWidthPickerViewController(userDefaults: userDefaults)
+            lineWidthPopover?.behavior = .transient
+            lineWidthPopover?.delegate = self
+        }
+
+        if let button = statusItem.button {
+            lineWidthPopover?.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+
+            if let popoverWindow = lineWidthPopover?.contentViewController?.view.window {
+                popoverWindow.level = .popUpMenu
+            }
+        }
+    }
+
     func popoverWillClose(_ notification: Notification) {
-        colorPopover = nil
+        if let popover = notification.object as? NSPopover {
+            if popover == colorPopover {
+                colorPopover = nil
+            } else if popover == lineWidthPopover {
+                lineWidthPopover = nil
+            }
+        }
     }
 
     @objc func toggleOverlay() {
+        // Always-on mode is incompatible with interactive overlay
+        if alwaysOnMode {
+            toggleAlwaysOnMode()
+        }
+
         guard let currentScreen = getCurrentScreen(),
             let overlayWindow = overlayWindows[currentScreen]
         else {
@@ -289,23 +452,50 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSPopoverD
         }
 
         if overlayWindow.isVisible {
+            if let activeField = overlayWindow.overlayView.activeTextField {
+                overlayWindow.overlayView.finalizeTextAnnotation(activeField)
+            }
             updateStatusBarIcon(with: .gray)
             overlayWindow.orderOut(nil)
-            NSApp.hide(nil)
+            CursorHighlightManager.shared.overlayVisibilityChanged()
         } else {
-            // Clear drawings if the setting is enabled
-            if UserDefaults.standard.bool(forKey: UserDefaults.clearDrawingsOnStartKey) {
+            configureWindowForNormalMode(overlayWindow)
+
+            if userDefaults.bool(forKey: UserDefaults.clearDrawingsOnStartKey) {
                 overlayWindow.overlayView.clearAll()
             }
 
             updateStatusBarIcon(with: currentColor)
             let screenFrame = currentScreen.frame
-            // Update window frame and position
             overlayWindow.setFrame(screenFrame, display: true)
             overlayWindow.makeKeyAndOrderFront(nil)
-            // Bring app forward
-            NSApp.activate(ignoringOtherApps: true)
+            CursorHighlightManager.shared.annotationColor = currentColor
+            CursorHighlightManager.shared.overlayVisibilityChanged()
         }
+    }
+
+    @objc func toggleAlwaysOnMode() {
+        alwaysOnMode.toggle()
+
+        overlayWindows.values.forEach { overlayWindow in
+            if let activeField = overlayWindow.overlayView.activeTextField {
+                overlayWindow.overlayView.finalizeTextAnnotation(activeField)
+            }
+            if alwaysOnMode {
+                configureWindowForAlwaysOnMode(overlayWindow)
+            } else {
+                configureWindowForNormalMode(overlayWindow)
+                overlayWindow.orderOut(nil)
+            }
+        }
+
+        let iconColor = alwaysOnMode
+            ? currentColor.withAlphaComponent(0.7)
+            : .gray
+        updateStatusBarIcon(with: iconColor)
+
+        userDefaults.set(alwaysOnMode, forKey: UserDefaults.alwaysOnModeKey)
+        updateAlwaysOnMenuItems()
     }
 
     @objc func closeOverlay() {
@@ -313,8 +503,18 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSPopoverD
             let overlayWindow = overlayWindows[currentScreen],
             overlayWindow.isVisible
         {
+            if let activeField = overlayWindow.overlayView.activeTextField {
+                overlayWindow.overlayView.finalizeTextAnnotation(activeField)
+            }
             updateStatusBarIcon(with: .gray)
             overlayWindow.orderOut(nil)
+            CursorHighlightManager.shared.overlayVisibilityChanged()
+        }
+    }
+
+    @objc func closeOverlayAndEnableAlwaysOn() {
+        if !alwaysOnMode {
+            toggleAlwaysOnMode()
         }
     }
 
@@ -323,85 +523,86 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSPopoverD
             let overlayWindow = overlayWindows[currentScreen],
             !overlayWindow.isVisible
         {
+            configureWindowForNormalMode(overlayWindow)
             updateStatusBarIcon(with: currentColor)
             let screenFrame = currentScreen.frame
-            // Update window frame and position
             overlayWindow.setFrame(screenFrame, display: true)
             overlayWindow.makeKeyAndOrderFront(nil)
-            // Bring app forward
-            NSApp.activate(ignoringOtherApps: true)
+            CursorHighlightManager.shared.annotationColor = currentColor
+            CursorHighlightManager.shared.overlayVisibilityChanged()
         }
     }
 
     func switchTool(to tool: ToolType) {
+        if alwaysOnMode {
+            toggleAlwaysOnMode()
+        }
+
         overlayWindows.values.forEach { window in
+            if window.overlayView.currentTool == .select && tool != .select {
+                window.overlayView.selectedObjects.removeAll()
+                window.overlayView.needsDisplay = true
+            }
+            // Save current tool as previous when switching TO text mode
+            if tool == .text && window.overlayView.currentTool != .text {
+                window.overlayView.previousTool = window.overlayView.currentTool
+            }
             window.overlayView.currentTool = tool
+            window.showToolFeedback(tool)
+            window.invalidateCursorRects(for: window.overlayView)
+            window.overlayView.updateCursor()
         }
         showOverlay()
     }
 
     @objc func enableArrowMode(_ sender: NSMenuItem) {
         switchTool(to: .arrow)
-        if let menu = statusItem.menu {
-            let currentToolItem = menu.item(at: 2)
-            currentToolItem?.title = "Current Tool: Arrow"
-        }
+        updateCurrentToolMenuItem(to: "Arrow")
     }
 
     @objc func enableLineMode(_ sender: NSMenuItem) {
         switchTool(to: .line)
-        if let menu = statusItem.menu {
-            let currentToolItem = menu.item(at: 2)
-            currentToolItem?.title = "Current Tool: Line"
-        }
+        updateCurrentToolMenuItem(to: "Line")
     }
 
     @objc func enablePenMode(_ sender: NSMenuItem) {
         switchTool(to: .pen)
-        if let menu = statusItem.menu {
-            let currentToolItem = menu.item(at: 2)
-            currentToolItem?.title = "Current Tool: Pen"
-        }
+        updateCurrentToolMenuItem(to: "Pen")
     }
 
     @objc func enableHighlighterMode(_ sender: NSMenuItem) {
         switchTool(to: .highlighter)
-        if let menu = statusItem.menu {
-            let currentToolItem = menu.item(at: 2)
-            currentToolItem?.title = "Current Tool: Highlighter"
-        }
+        updateCurrentToolMenuItem(to: "Highlighter")
     }
 
     @objc func enableRectangleMode(_ sender: NSMenuItem) {
         switchTool(to: .rectangle)
-        if let menu = statusItem.menu {
-            let currentToolItem = menu.item(at: 2)
-            currentToolItem?.title = "Current Tool: Rectangle"
-        }
+        updateCurrentToolMenuItem(to: "Rectangle")
     }
 
     @objc func enableCircleMode(_ sender: NSMenuItem) {
         switchTool(to: .circle)
-        if let menu = statusItem.menu {
-            let currentToolItem = menu.item(at: 2)
-            currentToolItem?.title = "Current Tool: Circle"
-        }
+        updateCurrentToolMenuItem(to: "Circle")
     }
 
     @objc func enableCounterMode(_ sender: NSMenuItem) {
         switchTool(to: .counter)
-        if let menu = statusItem.menu {
-            let currentToolItem = menu.item(at: 2)
-            currentToolItem?.title = "Current Tool: Counter"
-        }
+        updateCurrentToolMenuItem(to: "Counter")
     }
 
     @objc func enableTextMode(_ sender: NSMenuItem) {
         switchTool(to: .text)
-        if let menu = statusItem.menu {
-            let currentToolItem = menu.item(at: 2)
-            currentToolItem?.title = "Current Tool: Text"
-        }
+        updateCurrentToolMenuItem(to: "Text")
+    }
+    
+    @objc func enableSelectMode(_ sender: NSMenuItem) {
+        switchTool(to: .select)
+        updateCurrentToolMenuItem(to: "Select")
+    }
+
+    @objc func enableEraserMode(_ sender: NSMenuItem) {
+        switchTool(to: .eraser)
+        updateCurrentToolMenuItem(to: "Eraser")
     }
 
     @objc func toggleBoardVisibility(_ sender: Any?) {
@@ -420,6 +621,88 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSPopoverD
         if let item = toggleBoardItem {
             item.title = boardEnabled ? "Hide \(boardType)" : "Show \(boardType)"
         }
+    }
+
+    @objc func toggleClickEffects(_ sender: Any?) {
+        let newState = !CursorHighlightManager.shared.clickEffectsEnabled
+        CursorHighlightManager.shared.clickEffectsEnabled = newState
+        CursorHighlightManager.shared.cursorHighlightEnabled = newState
+        updateClickEffectsMenuItems()
+
+        let text = newState ? "Cursor Highlight On" : "Cursor Highlight Off"
+        let icon = newState ? "👆" : "🚫"
+        for (_, window) in overlayWindows where window.isVisible {
+            window.showToggleFeedback(text, icon: icon)
+        }
+    }
+
+    func updateClickEffectsMenuItems() {
+        guard let menu = statusItem.menu else { return }
+        if let item = menu.items.first(where: { $0.action == #selector(toggleClickEffects(_:)) }) {
+            let isEnabled = CursorHighlightManager.shared.clickEffectsEnabled
+            item.title = isEnabled ? "Disable Cursor Highlight" : "Enable Cursor Highlight"
+        }
+    }
+
+    func updateAlwaysOnMenuItems() {
+        guard let menu = statusItem.menu else { return }
+        
+        let currentOverlayModeItem = menu.items.first { 
+            $0.title.hasPrefix("Overlay Mode:")
+        }
+        if let item = currentOverlayModeItem {
+            item.title = alwaysOnMode ? "Overlay Mode: Always-On" : "Overlay Mode: Interactive"
+        }
+        
+        let toggleAlwaysOnModeItem = menu.items.first { $0.action == #selector(toggleAlwaysOnMode) }
+        if let item = toggleAlwaysOnModeItem {
+            item.title = alwaysOnMode ? "Exit Always-On Mode" : "Always-On Mode"
+        }
+    }
+    
+    func updateCurrentToolMenuItem(to toolName: String) {
+        guard let menu = statusItem.menu else { return }
+        
+        let currentToolItem = menu.items.first { $0.title.hasPrefix("Current Tool:") }
+        currentToolItem?.title = "Current Tool: \(toolName)"
+    }
+    
+    private func configureWindowForNormalMode(_ overlayWindow: OverlayWindow) {
+        overlayWindow.ignoresMouseEvents = false
+        overlayWindow.overlayView.isReadOnlyMode = false
+
+        let persistedFadeMode = userDefaults.object(forKey: UserDefaults.fadeModeKey) as? Bool ?? true
+        overlayWindow.overlayView.fadeMode = persistedFadeMode
+    }
+
+    private func configureWindowForAlwaysOnMode(_ overlayWindow: OverlayWindow) {
+        overlayWindow.ignoresMouseEvents = true
+        overlayWindow.overlayView.fadeMode = false
+        overlayWindow.overlayView.isReadOnlyMode = true
+
+        let screenFrame = overlayWindow.screen?.frame ?? NSScreen.main?.frame ?? .zero
+        overlayWindow.setFrame(screenFrame, display: true)
+        overlayWindow.orderFront(nil)
+        overlayWindow.stopFadeLoop()
+    }
+    
+    private func updateFadeModeMenuItems(isCurrentlyFadeMode: Bool) {
+        guard let menu = statusItem.menu else { return }
+        
+        let currentDrawingModeItem = menu.items.first { 
+            $0.title.hasPrefix("Drawing Mode:") 
+        }
+        let toggleDrawingModeItem = menu.items.first { 
+            $0.action == #selector(toggleFadeMode(_:)) 
+        }
+
+        currentDrawingModeItem?.title = isCurrentlyFadeMode
+            ? "Drawing Mode: Persist"
+            : "Drawing Mode: Fade"
+
+        toggleDrawingModeItem?.title = isCurrentlyFadeMode
+            ? "Fade"
+            : "Persist"
     }
 
     func setupBoardObservers() {
@@ -443,6 +726,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSPopoverD
             name: .boardAppearanceChanged,
             object: nil
         )
+
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(shortcutsDidChange),
+            name: .shortcutsDidChange,
+            object: nil
+        )
     }
 
     @objc func boardStateChanged() {
@@ -451,6 +741,49 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSPopoverD
 
     @objc func boardAppearanceChanged() {
         updateBoardMenuItems()
+    }
+
+    @objc func shortcutsDidChange() {
+        refreshMenuKeyEquivalents()
+    }
+
+    func refreshMenuKeyEquivalents() {
+        guard let menu = statusItem.menu else { return }
+
+        for item in menu.items {
+            switch item.action {
+            case #selector(showColorPicker(_:)):
+                item.keyEquivalent = ShortcutManager.shared.getShortcut(for: .colorPicker)
+            case #selector(showLineWidthPicker(_:)):
+                item.keyEquivalent = ShortcutManager.shared.getShortcut(for: .lineWidthPicker)
+            case #selector(enableArrowMode(_:)):
+                item.keyEquivalent = ShortcutManager.shared.getShortcut(for: .arrow)
+            case #selector(enableLineMode(_:)):
+                item.keyEquivalent = ShortcutManager.shared.getShortcut(for: .line)
+            case #selector(enablePenMode(_:)):
+                item.keyEquivalent = ShortcutManager.shared.getShortcut(for: .pen)
+            case #selector(enableHighlighterMode(_:)):
+                item.keyEquivalent = ShortcutManager.shared.getShortcut(for: .highlighter)
+            case #selector(enableRectangleMode(_:)):
+                item.keyEquivalent = ShortcutManager.shared.getShortcut(for: .rectangle)
+            case #selector(enableCircleMode(_:)):
+                item.keyEquivalent = ShortcutManager.shared.getShortcut(for: .circle)
+            case #selector(enableCounterMode(_:)):
+                item.keyEquivalent = ShortcutManager.shared.getShortcut(for: .counter)
+            case #selector(enableTextMode(_:)):
+                item.keyEquivalent = ShortcutManager.shared.getShortcut(for: .text)
+            case #selector(enableSelectMode(_:)):
+                item.keyEquivalent = ShortcutManager.shared.getShortcut(for: .select)
+            case #selector(enableEraserMode(_:)):
+                item.keyEquivalent = ShortcutManager.shared.getShortcut(for: .eraser)
+            case #selector(toggleBoardVisibility(_:)):
+                item.keyEquivalent = ShortcutManager.shared.getShortcut(for: .toggleBoard)
+            case #selector(toggleClickEffects(_:)):
+                item.keyEquivalent = ShortcutManager.shared.getShortcut(for: .toggleClickEffects)
+            default:
+                break
+            }
+        }
     }
 
     @objc func undo() {
@@ -487,21 +820,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSPopoverD
             window.overlayView.fadeMode.toggle()
         }
 
-        UserDefaults.standard.set(!isCurrentlyFadeMode, forKey: UserDefaults.fadeModeKey)
+        userDefaults.set(!isCurrentlyFadeMode, forKey: UserDefaults.fadeModeKey)
 
-        if let menu = statusItem.menu {
-            let currentDrawingModeItem = menu.item(at: 14)
-            let toggleDrawingModeItem = menu.item(at: 15)
+        updateFadeModeMenuItems(isCurrentlyFadeMode: isCurrentlyFadeMode)
 
-            currentDrawingModeItem?.title =
-                isCurrentlyFadeMode
-                ? "Current Mode: Persist"
-                : "Current Mode: Fade"
-
-            toggleDrawingModeItem?.title =
-                isCurrentlyFadeMode
-                ? "Fade"
-                : "Persist"
+        let text = isCurrentlyFadeMode ? "Persist Mode" : "Fade Mode"
+        let icon = isCurrentlyFadeMode ? "📌" : "⏳"
+        for (_, window) in overlayWindows where window.isVisible {
+            window.showToggleFeedback(text, icon: icon)
         }
     }
 
@@ -513,12 +839,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSPopoverD
         }
 
         let newWindow = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 400, height: 300),
+            contentRect: NSRect(x: 0, y: 0, width: 600, height: 600),
             styleMask: [.titled, .closable],
             backing: .buffered,
             defer: false
         )
-        newWindow.title = "Settings"
+        newWindow.title = "Annotate Settings"
         newWindow.isReleasedWhenClosed = false
         newWindow.center()
         newWindow.delegate = self
@@ -587,34 +913,246 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSPopoverD
         // Set the composite image to the status bar button
         statusItem.button?.image = compositeImage
     }
+    
+    func setupApplicationMenu() {
+        guard let mainMenu = NSApp.mainMenu,
+              let appMenuItem = mainMenu.items.first,
+              let appMenu = appMenuItem.submenu else {
+            return
+        }
 
-    func updateMenuKeyEquivalents() {
-        guard let menu = statusItem.menu else { return }
-        for item in menu.items {
-            switch item.title {
-            case "Pen":
-                item.keyEquivalent = ShortcutManager.shared.getShortcut(for: .pen)
-            case "Arrow":
-                item.keyEquivalent = ShortcutManager.shared.getShortcut(for: .arrow)
-            case "Line":
-                item.keyEquivalent = ShortcutManager.shared.getShortcut(for: .line)
-            case "Highlighter":
-                item.keyEquivalent = ShortcutManager.shared.getShortcut(for: .highlighter)
-            case "Rectangle":
-                item.keyEquivalent = ShortcutManager.shared.getShortcut(for: .rectangle)
-            case "Circle":
-                item.keyEquivalent = ShortcutManager.shared.getShortcut(for: .circle)
-            case "Text":
-                item.keyEquivalent = ShortcutManager.shared.getShortcut(for: .text)
-            case "Color":
-                item.keyEquivalent = ShortcutManager.shared.getShortcut(for: .colorPicker)
-            case let title where title.hasPrefix("Show") || title.hasPrefix("Hide"):
-                if item.action == #selector(toggleBoardVisibility(_:)) {
-                    item.keyEquivalent = ShortcutManager.shared.getShortcut(for: .toggleBoard)
-                }
-            default:
+        for item in appMenu.items {
+            if item.title.hasPrefix("About") {
+                item.target = self
+                item.action = #selector(showAbout)
                 break
             }
+        }
+    }
+    
+    @objc func showAbout() {
+        if aboutWindow == nil {
+            let aboutView = AboutView(updaterController: updaterController)
+            let hostingController = NSHostingController(rootView: aboutView)
+            
+            aboutWindow = NSWindow(
+                contentRect: NSRect(x: 0, y: 0, width: 320, height: 400),
+                styleMask: [.titled, .closable],
+                backing: .buffered,
+                defer: false
+            )
+            aboutWindow?.contentViewController = hostingController
+            aboutWindow?.title = "About Annotate"
+            aboutWindow?.isReleasedWhenClosed = false
+            aboutWindow?.delegate = self
+        }
+        
+        aboutWindow?.makeKeyAndOrderFront(nil)
+
+        DispatchQueue.main.async {
+            self.aboutWindow?.center()
+        }
+
+        NSApp.activate(ignoringOtherApps: true)
+    }
+    
+    @objc func checkForUpdates() {
+        updaterController.checkForUpdates(nil)
+    }
+
+    // MARK: - Cursor Highlighting
+
+    private func createCursorHighlightWindow(for screen: NSScreen) -> CursorHighlightWindow {
+        let window = CursorHighlightWindow(
+            contentRect: screen.frame,
+            styleMask: .borderless,
+            backing: .buffered,
+            defer: false
+        )
+        window.setFrameOrigin(screen.frame.origin)
+        return window
+    }
+
+    func setupCursorHighlightWindows() {
+        for screen in NSScreen.screens {
+            let window = createCursorHighlightWindow(for: screen)
+            cursorHighlightWindows[screen] = window
+            window.updateVisibility()
+        }
+    }
+
+    func setupGlobalMouseMonitors() {
+        // Global monitors - receive events when app is NOT frontmost
+        globalMouseMoveMonitor = NSEvent.addGlobalMonitorForEvents(
+            matching: [.mouseMoved, .leftMouseDragged, .rightMouseDragged, .otherMouseDragged]
+        ) { [weak self] event in
+            self?.handleGlobalMouseMove(event)
+        }
+
+        globalMouseClickMonitor = NSEvent.addGlobalMonitorForEvents(
+            matching: [.leftMouseDown, .rightMouseDown]
+        ) { [weak self] event in
+            self?.handleGlobalMouseDown(event)
+        }
+
+        globalMouseUpMonitor = NSEvent.addGlobalMonitorForEvents(
+            matching: [.leftMouseUp, .rightMouseUp]
+        ) { [weak self] event in
+            self?.handleGlobalMouseUp(event)
+        }
+
+        // Local monitors - receive events when app IS frontmost (e.g., Settings window open)
+        localMouseMoveMonitor = NSEvent.addLocalMonitorForEvents(
+            matching: [.mouseMoved, .leftMouseDragged, .rightMouseDragged, .otherMouseDragged]
+        ) { [weak self] event in
+            self?.handleGlobalMouseMove(event)
+            return event
+        }
+
+        localMouseClickMonitor = NSEvent.addLocalMonitorForEvents(
+            matching: [.leftMouseDown, .rightMouseDown]
+        ) { [weak self] event in
+            self?.handleGlobalMouseDown(event)
+            return event
+        }
+
+        localMouseUpMonitor = NSEvent.addLocalMonitorForEvents(
+            matching: [.leftMouseUp, .rightMouseUp]
+        ) { [weak self] event in
+            self?.handleGlobalMouseUp(event)
+            return event
+        }
+
+        // Modifier keys from hotkeys can trigger cursor resets
+        localFlagsChangedMonitor = NSEvent.addLocalMonitorForEvents(
+            matching: [.flagsChanged]
+        ) { [weak self] event in
+            self?.handleFlagsChanged(event)
+            return event
+        }
+    }
+
+    func handleFlagsChanged(_ event: NSEvent) {
+        CursorHighlightManager.shared.updateCursorVisibility()
+    }
+
+    func setupCursorHighlightObservers() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(cursorHighlightStateChanged),
+            name: .cursorHighlightStateChanged,
+            object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(cursorHighlightNeedsUpdate),
+            name: .cursorHighlightNeedsUpdate,
+            object: nil
+        )
+    }
+
+    @objc func cursorHighlightNeedsUpdate() {
+        triggerCursorHighlightUpdate()
+    }
+
+    @objc func cursorHighlightStateChanged() {
+        updateAllCursorHighlightWindows()
+        CursorHighlightManager.shared.updateCursorVisibility()
+        overlayWindows.values.forEach { window in
+            window.overlayView.updateCursor()
+            window.overlayView.window?.invalidateCursorRects(for: window.overlayView)
+        }
+    }
+
+    /// Called from OverlayWindow to trigger cursor highlight updates for local mouse events
+    func triggerCursorHighlightUpdate() {
+        cursorHighlightWindows.values.forEach { $0.highlightView.updateHoldRingPosition() }
+
+        if let currentScreen = getCurrentScreen(),
+           let window = cursorHighlightWindows[currentScreen]
+        {
+            window.startAnimationLoop()
+        }
+    }
+
+    func handleGlobalMouseMove(_ event: NSEvent) {
+        let manager = CursorHighlightManager.shared
+        manager.cursorPosition = NSEvent.mouseLocation
+        manager.updateCursorVisibility()
+
+        let shouldUpdateSpotlight = manager.shouldShowCursorHighlight
+        let shouldUpdateHoldRing = manager.isActive && manager.isMouseDown
+
+        guard shouldUpdateSpotlight || shouldUpdateHoldRing else { return }
+
+        cursorHighlightWindows.values.forEach { window in
+            if shouldUpdateSpotlight { window.highlightView.updateSpotlightPosition() }
+            if shouldUpdateHoldRing { window.highlightView.updateHoldRingPosition() }
+        }
+
+        if let currentScreen = getCurrentScreen(),
+           let window = cursorHighlightWindows[currentScreen]
+        {
+            window.startAnimationLoop()
+        }
+    }
+
+    func handleGlobalMouseDown(_ event: NSEvent) {
+        let manager = CursorHighlightManager.shared
+        guard manager.isActive else { return }
+
+        manager.isMouseDown = true
+        manager.mouseDownTime = CACurrentMediaTime()
+        manager.cursorPosition = NSEvent.mouseLocation
+
+        if let currentScreen = getCurrentScreen(),
+           let window = cursorHighlightWindows[currentScreen]
+        {
+            window.highlightView.updateHoldRingPosition()
+            window.startAnimationLoop()
+        }
+    }
+
+    func handleGlobalMouseUp(_ event: NSEvent) {
+        let manager = CursorHighlightManager.shared
+
+        guard manager.isActive else {
+            manager.isMouseDown = false
+            return
+        }
+
+        manager.startReleaseAnimation()
+        manager.isMouseDown = false
+
+        cursorHighlightWindows.values.forEach { $0.highlightView.updateHoldRingPosition() }
+
+        if let currentScreen = getCurrentScreen(),
+           let window = cursorHighlightWindows[currentScreen]
+        {
+            window.startAnimationLoop()
+        }
+    }
+
+    func updateAllCursorHighlightWindows() {
+        cursorHighlightWindows.values.forEach { $0.updateVisibility() }
+    }
+
+    func updateCursorHighlightWindowsForScreenChange() {
+        // Remove windows for disconnected screens
+        cursorHighlightWindows = cursorHighlightWindows.filter { screen, window in
+            let exists = NSScreen.screens.contains(screen)
+            if !exists {
+                window.stopAnimationLoop()
+                window.orderOut(nil)
+            }
+            return exists
+        }
+
+        // Add windows for newly connected screens
+        for screen in NSScreen.screens where cursorHighlightWindows[screen] == nil {
+            let window = createCursorHighlightWindow(for: screen)
+            cursorHighlightWindows[screen] = window
+            window.updateVisibility()
         }
     }
 }

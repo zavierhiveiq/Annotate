@@ -1,2 +1,45 @@
-.build
-xcuserdata
+# Xcode
+## User settings
+xcuserdata/
+
+## Obj-C/Swift specific
+*.hmap
+
+## App packaging
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+## Playgrounds
+timeline.xctimeline
+playground.xcworkspace
+
+# Swift Package Manager
+.swiftpm
+.spm
+
+.build/
+build/
+.DS_Store
+
+# Xcode Archives and Build Artifacts
+*.xcarchive/
+DerivedData/
+Symbols/
+
+# XcodeGen
+*.xcodeproj/project.pbxproj
+*.xcodeproj/xcshareddata/
+
+# Keep Swift Package Manager resolution
+!*.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
+
+# Sparkle Framework and Tools
+Sparkle.framework/
+*.app/
+bin/
+
+# Sample and Backup Files
+*Sample*.xml
+*.backup
+test_*

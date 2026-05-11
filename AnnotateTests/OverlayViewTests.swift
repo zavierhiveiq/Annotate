@@ -71,12 +71,12 @@ final class OverlayViewTests: XCTestCase, Sendable {
 
     func testClearAll() {
         // Add some test data
-        overlayView.paths = [DrawingPath(points: [], color: .red)]
-        overlayView.arrows = [Arrow(startPoint: .zero, endPoint: .zero, color: .blue)]
-        overlayView.lines = [Line(startPoint: .zero, endPoint: .zero, color: .red)]
-        overlayView.highlightPaths = [DrawingPath(points: [], color: .yellow)]
-        overlayView.rectangles = [Rectangle(startPoint: .zero, endPoint: .zero, color: .green)]
-        overlayView.circles = [Circle(startPoint: .zero, endPoint: .zero, color: .purple)]
+        overlayView.paths = [DrawingPath(points: [], color: .red, lineWidth: 3.0)]
+        overlayView.arrows = [Arrow(startPoint: .zero, endPoint: .zero, color: .blue, lineWidth: 3.0)]
+        overlayView.lines = [Line(startPoint: .zero, endPoint: .zero, color: .red, lineWidth: 3.0)]
+        overlayView.highlightPaths = [DrawingPath(points: [], color: .yellow, lineWidth: 3.0)]
+        overlayView.rectangles = [Rectangle(startPoint: .zero, endPoint: .zero, color: .green, lineWidth: 3.0)]
+        overlayView.circles = [Circle(startPoint: .zero, endPoint: .zero, color: .purple, lineWidth: 3.0)]
         overlayView.textAnnotations = [
             TextAnnotation(text: "Test", position: .zero, color: .black, fontSize: 12)
         ]
@@ -98,7 +98,7 @@ final class OverlayViewTests: XCTestCase, Sendable {
         // Create a new line
         let startPoint = NSPoint(x: 100, y: 100)
         let endPoint = NSPoint(x: 200, y: 200)
-        let line = Line(startPoint: startPoint, endPoint: endPoint, color: .systemBlue)
+        let line = Line(startPoint: startPoint, endPoint: endPoint, color: .systemBlue, lineWidth: 3.0)
         
         // Add it to the view
         overlayView.lines.append(line)
@@ -108,6 +108,7 @@ final class OverlayViewTests: XCTestCase, Sendable {
         XCTAssertEqual(overlayView.lines[0].startPoint, startPoint)
         XCTAssertEqual(overlayView.lines[0].endPoint, endPoint)
         XCTAssertEqual(overlayView.lines[0].color, .systemBlue)
+        XCTAssertEqual(overlayView.lines[0].lineWidth, 3.0)
         
         // Test delete last item when tool is line
         overlayView.currentTool = .line
@@ -122,6 +123,7 @@ final class OverlayViewTests: XCTestCase, Sendable {
             startPoint: NSPoint(x: 100, y: 100),
             endPoint: NSPoint(x: 200, y: 200),
             color: .systemBlue,
+            lineWidth: 3.0,
             creationTime: now
         )
         
@@ -136,6 +138,7 @@ final class OverlayViewTests: XCTestCase, Sendable {
             startPoint: NSPoint(x: 300, y: 300),
             endPoint: NSPoint(x: 400, y: 400),
             color: .systemRed,
+            lineWidth: 3.0,
             creationTime: now - 10.0 // Way beyond fade duration
         )
         
@@ -174,6 +177,18 @@ final class OverlayViewTests: XCTestCase, Sendable {
         XCTAssertEqual(overlayView.currentTool, .counter)
     }
 
+    func testResetCounter() {
+        overlayView.nextCounterNumber = 5
+        overlayView.counterAnnotations = [
+            CounterAnnotation(number: 1, position: .zero, color: .blue)
+        ]
+
+        overlayView.resetCounter()
+
+        XCTAssertEqual(overlayView.nextCounterNumber, 1)
+        XCTAssertEqual(overlayView.counterAnnotations.count, 1, "Existing counters should remain")
+    }
+
     func testDeleteLastCounter() {
         // Add two counters
         let counter1 = CounterAnnotation(
@@ -210,5 +225,126 @@ final class OverlayViewTests: XCTestCase, Sendable {
         XCTAssertFalse(
             overlayView.adaptColorsToBoardType,
             "adaptColorsToBoardType should be false when disabled")
+    }
+
+    // MARK: - Cursor Tests
+
+    func testCursorIsIBeamInTextModeWithoutActiveTextField() {
+        overlayView.currentTool = .text
+        overlayView.activeTextField = nil
+
+        XCTAssertEqual(overlayView.currentTool, .text)
+        XCTAssertNil(overlayView.activeTextField)
+
+        let shouldShowIBeam = overlayView.currentTool == .text && overlayView.activeTextField == nil
+        XCTAssertTrue(shouldShowIBeam, "Should show I-beam cursor in text mode without active text field")
+    }
+
+    func testCursorIsNotIBeamWhenTextFieldIsActive() {
+        overlayView.currentTool = .text
+        overlayView.createTextField(at: NSPoint(x: 100, y: 100), withText: "", width: 100)
+
+        XCTAssertEqual(overlayView.currentTool, .text)
+        XCTAssertNotNil(overlayView.activeTextField)
+
+        let shouldShowIBeam = overlayView.currentTool == .text && overlayView.activeTextField == nil
+        XCTAssertFalse(shouldShowIBeam, "Should not show I-beam cursor when text field is active")
+
+        overlayView.activeTextField?.removeFromSuperview()
+        overlayView.activeTextField = nil
+    }
+
+    // MARK: - Text Field Positioning Tests
+
+    func testCreateTextFieldForNewTextCentersVertically() {
+        let clickPoint = NSPoint(x: 200, y: 300)
+        overlayView.createTextField(at: clickPoint, withText: "", width: 100)
+
+        guard let textField = overlayView.activeTextField else {
+            XCTFail("Text field should be created")
+            return
+        }
+
+        // For new text, Y offset should be -16 (half of 32px height) to center at click
+        // X offset is -8 for left padding
+        XCTAssertEqual(textField.frame.origin.x, clickPoint.x - 8, "X should offset by left padding")
+        XCTAssertEqual(textField.frame.origin.y, clickPoint.y - 16, "Y should center text field at click point")
+
+        textField.removeFromSuperview()
+        overlayView.activeTextField = nil
+    }
+
+    func testCreateTextFieldForEditingAlignWithStoredPosition() {
+        let storedPosition = NSPoint(x: 200, y: 300)
+        overlayView.createTextField(at: storedPosition, withText: "Existing text", width: 100)
+
+        guard let textField = overlayView.activeTextField else {
+            XCTFail("Text field should be created")
+            return
+        }
+
+        // For editing, Y offset should be -4 (top padding only) to align with drawn text
+        // X offset is -8 for left padding
+        XCTAssertEqual(textField.frame.origin.x, storedPosition.x - 8, "X should offset by left padding")
+        XCTAssertEqual(textField.frame.origin.y, storedPosition.y - 4, "Y should offset by top padding for editing")
+
+        textField.removeFromSuperview()
+        overlayView.activeTextField = nil
+    }
+
+    func testResizeActiveTextFieldWidthGrowsWithFontSize() {
+        let clickPoint = NSPoint(x: 100, y: 200)
+        overlayView.currentTool = .text
+        overlayView.currentTextAnnotation = TextAnnotation(
+            text: "", position: clickPoint, color: .black, fontSize: defaultTextAnnotationFontSize
+        )
+        overlayView.createTextField(at: clickPoint, withText: "Hello world", width: 100)
+
+        guard let textField = overlayView.activeTextField else {
+            XCTFail("Text field should be created")
+            return
+        }
+
+        textField.font = NSFont.systemFont(ofSize: textAnnotationFontSizeRange.lowerBound)
+        overlayView.resizeActiveTextFieldWidth(textField)
+        let smallWidth = textField.frame.size.width
+
+        textField.font = NSFont.systemFont(ofSize: textAnnotationFontSizeRange.upperBound)
+        overlayView.resizeActiveTextFieldWidth(textField)
+        let largeWidth = textField.frame.size.width
+
+        XCTAssertGreaterThan(
+            largeWidth, smallWidth,
+            "Text field width should grow when font size increases"
+        )
+
+        textField.removeFromSuperview()
+        overlayView.activeTextField = nil
+    }
+
+    func testFinalizeTextAnnotationAccountsForPadding() {
+        let clickPoint = NSPoint(x: 200, y: 300)
+        overlayView.currentTool = .text
+        overlayView.currentTextAnnotation = TextAnnotation(
+            text: "", position: clickPoint, color: .red, fontSize: defaultTextAnnotationFontSize
+        )
+        overlayView.createTextField(at: clickPoint, withText: "", width: 100)
+
+        guard let textField = overlayView.activeTextField else {
+            XCTFail("Text field should be created")
+            return
+        }
+
+        textField.stringValue = "Test text"
+        overlayView.finalizeTextAnnotation(textField)
+
+        XCTAssertEqual(overlayView.textAnnotations.count, 1, "Should have one text annotation")
+
+        let annotation = overlayView.textAnnotations[0]
+        // Finalized position should account for padding: frame.origin + (8, 4)
+        let expectedX = clickPoint.x - 8 + 8  // -8 for field offset, +8 for padding = clickPoint.x
+        let expectedY = clickPoint.y - 16 + 4  // -16 for field offset, +4 for padding
+        XCTAssertEqual(annotation.position.x, expectedX, accuracy: 0.01, "Position X should account for padding")
+        XCTAssertEqual(annotation.position.y, expectedY, accuracy: 0.01, "Position Y should account for padding")
     }
 }

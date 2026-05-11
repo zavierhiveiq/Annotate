@@ -1,0 +1,41 @@
+changelog:
+  exclude:
+    labels:
+      - skip-changelog
+      - duplicate
+  categories:
+    - title: '🚀 Features'
+      labels:
+        - 'feature'
+        - 'enhancement'
+        - 'new'
+    - title: '🐛 Bug Fixes'
+      labels:
+        - 'bug'
+        - 'fix'
+        - 'bugfix'
+    - title: '⚡ Improvements'
+      labels:
+        - 'improvement'
+        - 'performance'
+        - 'optimization'
+    - title: '🚨 Breaking Changes'
+      labels:
+        - 'breaking-change'
+        - 'breaking'
+    - title: '🛠️ Maintenance'
+      labels:
+        - 'chore'
+        - 'refactor'
+        - 'cleanup'
+    - title: '📝 Documentation'
+      labels:
+        - 'docs'
+        - 'documentation'
+    - title: '🧪 Testing'
+      labels:
+        - 'test'
+        - 'tests'
+    - title: 'Other Changes'
+      labels:
+        - '*'

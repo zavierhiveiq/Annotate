@@ -1,5 +1,9 @@
 import Foundation
 
+extension Notification.Name {
+    static let shortcutsDidChange = Notification.Name("shortcutsDidChange")
+}
+
 enum ShortcutKey: String, CaseIterable {
     case pen = "p"
     case arrow = "a"
@@ -9,8 +13,12 @@ enum ShortcutKey: String, CaseIterable {
     case circle = "o"
     case counter = "n"
     case text = "t"
+    case select = "v"
+    case eraser = "e"
     case colorPicker = "c"
+    case lineWidthPicker = "w"
     case toggleBoard = "b"
+    case toggleClickEffects = "k"
 
     var defaultKey: String { rawValue }
 
@@ -24,20 +32,26 @@ enum ShortcutKey: String, CaseIterable {
         case .circle: return "Circle"
         case .counter: return "Counter"
         case .text: return "Text"
+        case .select: return "Select"
+        case .eraser: return "Eraser"
         case .colorPicker: return "Color Picker"
+        case .lineWidthPicker: return "Line Width"
         case .toggleBoard: return "Toggle Board"
+        case .toggleClickEffects: return "Toggle Cursor Highlight"
         }
     }
 }
 
 @MainActor
 class ShortcutManager: @unchecked Sendable {
-    static let shared = ShortcutManager()
+    static var shared = ShortcutManager()
 
-    private let defaults = UserDefaults.standard
+    private let defaults: UserDefaults
     private let shortcutPrefix = "shortcut."
 
-    private init() {}
+    init(userDefaults: UserDefaults = .standard) {
+        self.defaults = userDefaults
+    }
 
     func getShortcut(for tool: ShortcutKey) -> String {
         defaults.string(forKey: shortcutPrefix + tool.rawValue) ?? tool.defaultKey
@@ -50,15 +64,21 @@ class ShortcutManager: @unchecked Sendable {
         }
         defaults.set(key, forKey: shortcutPrefix + tool.rawValue)
         defaults.synchronize()
+        NotificationCenter.default.post(name: .shortcutsDidChange, object: nil)
     }
 
     func resetToDefault(tool: ShortcutKey) {
         defaults.removeObject(forKey: shortcutPrefix + tool.rawValue)
         defaults.synchronize()
+        NotificationCenter.default.post(name: .shortcutsDidChange, object: nil)
     }
 
     func resetAllToDefault() {
-        ShortcutKey.allCases.forEach { resetToDefault(tool: $0) }
+        ShortcutKey.allCases.forEach { tool in
+            defaults.removeObject(forKey: shortcutPrefix + tool.rawValue)
+        }
+        defaults.synchronize()
+        NotificationCenter.default.post(name: .shortcutsDidChange, object: nil)
     }
 
     func isShortcutTaken(_ key: String, excluding tool: ShortcutKey) -> Bool {

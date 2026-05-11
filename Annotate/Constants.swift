@@ -1,8 +1,9 @@
-import Foundation
+import Cocoa
 import KeyboardShortcuts
 
 extension KeyboardShortcuts.Name {
     static let toggleOverlay = Self("toggleOverlay")
+    static let toggleAlwaysOnMode = Self("toggleAlwaysOnMode")
 }
 
 extension UserDefaults {
@@ -11,4 +12,37 @@ extension UserDefaults {
     static let fadeModeKey = "FadeMode"
     static let enableBoardKey = "EnableBoard"
     static let boardOpacityKey = "BoardOpacity"
+    static let alwaysOnModeKey = "AlwaysOnMode"
+    static let lineWidthKey = "LineWidth"
+    static let hideToolFeedbackKey = "HideToolFeedback"
+    static let clickRippleEnabledKey = "ClickRippleEnabled"
+    static let clickRippleColorKey = "ClickRippleColor"
+    static let clickRippleSizeKey = "ClickRippleSize"
+    static let cursorHighlightEnabledKey = "CursorHighlightEnabled"
+    static let spotlightSizeKey = "SpotlightSize"
+    static let activeCursorStyleKey = "ActiveCursorStyle"
+    static let activeCursorSizeKey = "ActiveCursorSize"
+    static let persistTextModeKey = "PersistTextMode"
+    static let defaultTextFontSizeKey = "TextFontSize"
+}
+
+let colorPalette: [NSColor] = [
+    .systemRed, .systemOrange, .systemYellow,
+    .systemGreen, .cyan, .systemIndigo,
+    .magenta, .white, .black,
+]
+
+let defaultTextAnnotationFontSize: CGFloat = 18
+let textAnnotationFontSizeRange: ClosedRange<CGFloat> = 12...48
+
+extension UserDefaults {
+    var textToolFontSize: CGFloat {
+        get {
+            let stored = double(forKey: Self.defaultTextFontSizeKey)
+            return stored > 0 ? CGFloat(stored) : defaultTextAnnotationFontSize
+        }
+        set {
+            set(Double(newValue), forKey: Self.defaultTextFontSizeKey)
+        }
+    }
 }

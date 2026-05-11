@@ -8,6 +8,32 @@ enum TestConstants {
     static let defaultDelay: TimeInterval = 0.1
     static let defaultFrameSize = NSSize(width: 800, height: 600)
     static let smallFrameSize = NSSize(width: 400, height: 300)
+    static let testSuiteName = "com.annotate.tests"
+}
+
+// MARK: - Test UserDefaults
+enum TestUserDefaults {
+    /// Creates a fresh isolated UserDefaults instance for testing
+    /// - Returns: A new UserDefaults suite completely isolated from production data
+    static func create() -> UserDefaults {
+        let suite = UserDefaults(suiteName: TestConstants.testSuiteName)!
+        clear(suite)
+        return suite
+    }
+
+    /// Clears all data from a test UserDefaults suite
+    static func clear(_ userDefaults: UserDefaults) {
+        userDefaults.dictionaryRepresentation().keys.forEach { key in
+            userDefaults.removeObject(forKey: key)
+        }
+        userDefaults.synchronize()
+    }
+
+    /// Completely removes the test suite from the system
+    static func removeSuite() {
+        UserDefaults.standard.removePersistentDomain(forName: TestConstants.testSuiteName)
+        UserDefaults.standard.synchronize()
+    }
 }
 
 // MARK: - Test Factory Methods
@@ -18,37 +44,40 @@ enum TestFactory {
         TimedPoint(point: NSPoint(x: x, y: y), timestamp: timestamp)
     }
 
-    static func createDrawingPath(points: [TimedPoint] = [], color: NSColor = .systemRed)
+    static func createDrawingPath(points: [TimedPoint] = [], color: NSColor = .systemRed, lineWidth: CGFloat = 3.0)
         -> DrawingPath
     {
-        DrawingPath(points: points, color: color)
+        DrawingPath(points: points, color: color, lineWidth: lineWidth)
     }
 
     static func createArrow(
         start: NSPoint = .zero,
         end: NSPoint = NSPoint(x: 100, y: 100),
         color: NSColor = .blue,
+        lineWidth: CGFloat = 3.0,
         time: CFTimeInterval? = nil
     ) -> Arrow {
-        Arrow(startPoint: start, endPoint: end, color: color, creationTime: time)
+        Arrow(startPoint: start, endPoint: end, color: color, lineWidth: lineWidth, creationTime: time)
     }
 
     static func createRectangle(
         start: NSPoint = .zero,
         end: NSPoint = NSPoint(x: 100, y: 100),
         color: NSColor = .green,
+        lineWidth: CGFloat = 3.0,
         time: CFTimeInterval? = nil
     ) -> Rectangle {
-        Rectangle(startPoint: start, endPoint: end, color: color, creationTime: time)
+        Rectangle(startPoint: start, endPoint: end, color: color, lineWidth: lineWidth, creationTime: time)
     }
 
     static func createCircle(
         start: NSPoint = .zero,
         end: NSPoint = NSPoint(x: 100, y: 100),
         color: NSColor = .purple,
+        lineWidth: CGFloat = 3.0,
         time: CFTimeInterval? = nil
     ) -> Circle {
-        Circle(startPoint: start, endPoint: end, color: color, creationTime: time)
+        Circle(startPoint: start, endPoint: end, color: color, lineWidth: lineWidth, creationTime: time)
     }
 
     static func createTextAnnotation(
@@ -84,7 +113,8 @@ enum TestEvents {
     static func createKeyEvent(
         type: NSEvent.EventType,
         keyCode: UInt16,
-        modifierFlags: NSEvent.ModifierFlags = []
+        modifierFlags: NSEvent.ModifierFlags = [],
+        characters: String = ""
     ) -> NSEvent? {
         return NSEvent.keyEvent(
             with: type,
@@ -93,11 +123,34 @@ enum TestEvents {
             timestamp: ProcessInfo.processInfo.systemUptime,
             windowNumber: 0,
             context: nil,
-            characters: "",
-            charactersIgnoringModifiers: "",
+            characters: characters,
+            charactersIgnoringModifiers: characters,
             isARepeat: false,
             keyCode: keyCode
         )
+    }
+    
+    static func createScrollEvent(
+        deltaY: CGFloat,
+        modifierFlags: NSEvent.ModifierFlags = []
+    ) -> NSEvent? {
+        // Create a CGEvent for scroll wheel
+        guard let cgEvent = CGEvent(
+            scrollWheelEvent2Source: nil,
+            units: .pixel,
+            wheelCount: 1,
+            wheel1: Int32(deltaY),
+            wheel2: 0,
+            wheel3: 0
+        ) else {
+            return nil
+        }
+        
+        // Set modifier flags
+        cgEvent.flags = CGEventFlags(rawValue: UInt64(modifierFlags.rawValue))
+        
+        // Convert to NSEvent
+        return NSEvent(cgEvent: cgEvent)
     }
 }
 
@@ -139,31 +192,23 @@ extension XCTestCase {
         wait(for: [expectation], timeout: duration + 1)
     }
 
-    func assertEventually(
+    nonisolated func assertEventually(
         timeout: TimeInterval = TestConstants.defaultTimeout,
         interval: TimeInterval = TestConstants.defaultDelay,
         description: String? = nil,
-        condition: @escaping () -> Bool
+        condition: @escaping @Sendable () -> Bool
     ) {
         let expectation = self.expectation(description: description ?? "Async condition")
 
-        var fulfilled = false
         let timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { timer in
             if condition() {
                 timer.invalidate()
-                if !fulfilled {
-                    fulfilled = true
-                    expectation.fulfill()
-                }
+                expectation.fulfill()
             }
         }
 
         DispatchQueue.main.asyncAfter(deadline: .now() + timeout) {
             timer.invalidate()
-            if !fulfilled {
-                fulfilled = true
-                expectation.fulfill()
-            }
         }
 
         wait(for: [expectation], timeout: timeout + 1)

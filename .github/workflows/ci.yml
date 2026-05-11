@@ -23,6 +23,12 @@ jobs:
       - name: Verify Xcode version
         run: xcodebuild -version
 
+      - name: Install dependencies
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
       - name: Install xcpretty
         run: gem install xcpretty --no-document
 

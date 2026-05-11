@@ -4,8 +4,6 @@
 <dict>
   <key>method</key>
   <string>developer-id</string>
-  <key>destination</key>
-  <string>export</string>
   <key>teamID</key>
   <string>__TEAM_ID__</string>
   <key>signingStyle</key>
