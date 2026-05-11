@@ -91,7 +91,7 @@ class OverlayView: NSView, NSTextFieldDelegate {
     var previousTool: ToolType = .pen
     var currentLineWidth: CGFloat = 3.0
 
-    var fadeMode: Bool = true
+    var fadeMode: Bool = false
     let fadeDuration: CFTimeInterval = 1.25
     var isReadOnlyMode: Bool = false
 
