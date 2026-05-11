@@ -55,3 +55,23 @@ jobs:
             -configuration Debug \
             -destination "platform=macOS" \
             test | xcpretty && exit ${PIPESTATUS[0]}
+
+      - name: Build release app (unsigned)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          xcodebuild \
+            -project Annotate.xcodeproj \
+            -scheme Annotate \
+            -configuration Release \
+            -derivedDataPath build \
+            -destination "platform=macOS" \
+            CODE_SIGNING_ALLOWED=NO \
+            build | xcpretty && exit ${PIPESTATUS[0]}
+
+      - name: Upload app artifact
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Annotate-unsigned
+          path: build/Build/Products/Release/Annotate.app
+          retention-days: 30
