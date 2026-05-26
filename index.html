@@ -762,21 +762,25 @@ const MAX_POLL_MS = 360000;
 
 const IMAGE_MODELS = [
   // ── Imagen models (predict endpoint) ──────────────────────────────────
-  { id:'imagen-3.0-generate-001',       name:'Imagen 3',          desc:'Confirmed stable model — best all-round quality via AI Studio', speed:'standard', pricePerImageUSD:0.04,  apiType:'imagen', badges:[], confirmed:true },
-  { id:'imagen-4.0-generate-001',       name:'Imagen 4 Standard', desc:'Newer generation model (preview — verify availability)', speed:'standard', pricePerImageUSD:0.04,  apiType:'imagen', badges:['preview'] },
-  { id:'imagen-4.0-ultra-generate-001', name:'Imagen 4 Ultra',    desc:'Highest quality Imagen 4 output (preview — verify availability)', speed:'pro', pricePerImageUSD:0.06, apiType:'imagen', badges:['highest-quality','preview'] },
-  { id:'imagen-4.0-fast-generate-001',  name:'Imagen 4 Fast',     desc:'Faster, cheaper Imagen 4 (preview — verify availability)', speed:'fast', pricePerImageUSD:0.02,  apiType:'imagen', badges:['best-value','preview'] },
+  { id:'imagen-4.0-generate-001',        name:'Imagen 4',            desc:'Imagen 4 standard quality via AI Studio', speed:'standard', pricePerImageUSD:0.04,  apiType:'imagen', badges:[], confirmed:true },
+  { id:'imagen-4.0-ultra-generate-001',  name:'Imagen 4 Ultra',      desc:'Highest quality Imagen 4 output', speed:'pro', pricePerImageUSD:0.06, apiType:'imagen', badges:['highest-quality'], confirmed:true },
+  { id:'imagen-4.0-fast-generate-001',   name:'Imagen 4 Fast',       desc:'Faster, cheaper Imagen 4', speed:'fast', pricePerImageUSD:0.02, apiType:'imagen', badges:['best-value'], confirmed:true },
   // ── Gemini native image gen (generateContent endpoint) ────────────────
-  { id:'gemini-2.0-flash-exp',          name:'Gemini 2.0 Flash',  desc:'Confirmed native image generation via Gemini — best for creative, instruction-following prompts', speed:'fast', pricePerImageUSD:0.067, inputPriceUSD:0.0011, apiType:'gemini', badges:['best-value'], confirmed:true },
-  { id:'gemini-2.0-flash-preview-image-generation', name:'Gemini 2.0 Flash Image', desc:'Image-generation-specific variant of Gemini 2.0 Flash (verify availability)', speed:'fast', pricePerImageUSD:0.067, inputPriceUSD:0.0011, apiType:'gemini', badges:['preview'] },
+  { id:'gemini-2.5-flash-image',               name:'Gemini 2.5 Flash Image',   desc:'Gemini 2.5 Flash preview image generation', speed:'fast', pricePerImageUSD:0.067, inputPriceUSD:0.0011, apiType:'gemini', badges:['preview'], confirmed:true },
+  { id:'gemini-3-pro-image-preview',           name:'Gemini 3 Pro Image',        desc:'Gemini 3 Pro image generation preview', speed:'standard', pricePerImageUSD:0.067, inputPriceUSD:0.0011, apiType:'gemini', badges:['preview','highest-quality'], confirmed:true },
+  { id:'gemini-3.1-flash-image-preview',       name:'Gemini 3.1 Flash Image',    desc:'Gemini 3.1 Flash image generation preview', speed:'fast', pricePerImageUSD:0.067, inputPriceUSD:0.0011, apiType:'gemini', badges:['preview'], confirmed:true },
 ];
 
 const VIDEO_MODELS = [
-  // ── Stable ────────────────────────────────────────────────────────────
-  { id:'veo-2.0-generate-001',          name:'Veo 2 (Stable)',   desc:'Confirmed stable model — use this first. Requires paid AI Studio plan + allowlist access', speed:'standard', pricePerSecUSD:0.35, apiType:'veo', badges:[], confirmed:true },
-  // ── Preview (may require separate allowlist signup) ───────────────────
-  { id:'veo-3.0-generate-preview',      name:'Veo 3 Standard',   desc:'Cinematic quality with native audio (preview — requires allowlist)', speed:'pro',  pricePerSecUSD:0.35, apiType:'veo', badges:['highest-quality','preview'] },
-  { id:'veo-3.0-fast-generate-preview', name:'Veo 3 Fast',       desc:'Speed-optimised Veo 3 (preview — requires allowlist)', speed:'fast', pricePerSecUSD:0.20, apiType:'veo', badges:['preview'] },
+  // ── Veo 2 ─────────────────────────────────────────────────────────────
+  { id:'veo-2.0-generate-001',           name:'Veo 2',           desc:'Stable Veo 2 model. Requires billing enabled on your Google Cloud account.', speed:'standard', pricePerSecUSD:0.35, apiType:'veo', badges:[], confirmed:true },
+  // ── Veo 3 ─────────────────────────────────────────────────────────────
+  { id:'veo-3.0-generate-001',           name:'Veo 3',           desc:'Cinematic quality with native audio generation', speed:'pro', pricePerSecUSD:0.35, apiType:'veo', badges:['highest-quality'], confirmed:true },
+  { id:'veo-3.0-fast-generate-001',      name:'Veo 3 Fast',      desc:'Speed-optimised Veo 3', speed:'fast', pricePerSecUSD:0.20, apiType:'veo', badges:['best-value'], confirmed:true },
+  // ── Veo 3.1 ───────────────────────────────────────────────────────────
+  { id:'veo-3.1-generate-preview',       name:'Veo 3.1',         desc:'Latest Veo 3.1 preview', speed:'pro', pricePerSecUSD:0.35, apiType:'veo', badges:['preview'], confirmed:true },
+  { id:'veo-3.1-fast-generate-preview',  name:'Veo 3.1 Fast',    desc:'Speed-optimised Veo 3.1 preview', speed:'fast', pricePerSecUSD:0.20, apiType:'veo', badges:['preview'], confirmed:true },
+  { id:'veo-3.1-lite-generate-preview',  name:'Veo 3.1 Lite',    desc:'Lightweight Veo 3.1 preview', speed:'fast', pricePerSecUSD:0.12, apiType:'veo', badges:['preview','best-value'], confirmed:true },
 ];
 
 /* ─── STATE ─── */
