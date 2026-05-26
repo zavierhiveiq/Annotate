@@ -254,25 +254,29 @@ body {
 /* ── BOTTOM BAR ── */
 .bottom-bar {
   position: fixed;
-  bottom: 32px;
-  left: 24px; right: 24px;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 62%;
+  min-width: 520px;
+  max-width: 1000px;
   z-index: 300;
   pointer-events: none;
 }
 
 .bb-inner {
-  background: rgba(12,12,12,0.94);
-  backdrop-filter: blur(28px);
-  -webkit-backdrop-filter: blur(28px);
+  background: rgba(12,12,12,0.95);
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
   border: 1px solid var(--border-2);
-  border-radius: 18px;
-  padding: 16px 18px;
+  border-radius: 22px;
+  padding: 20px 22px;
   display: flex;
   align-items: flex-end;
-  gap: 12px;
-  box-shadow: 0 12px 56px rgba(0,0,0,0.65), 0 1px 0 rgba(255,255,255,0.04) inset;
+  gap: 14px;
+  box-shadow: 0 16px 64px rgba(0,0,0,0.7), 0 1px 0 rgba(255,255,255,0.05) inset;
   pointer-events: all;
-  min-height: 84px;
+  min-height: 100px;
 }
 
 /* Attach button */
@@ -281,9 +285,9 @@ body {
   flex-shrink: 0; position: relative;
 }
 .bb-attach-btn {
-  width: 44px; height: 44px; flex-shrink: 0;
+  width: 52px; height: 52px; flex-shrink: 0;
   background: var(--bg-card); border: 1px solid var(--border-2);
-  border-radius: 11px; color: var(--text-3); font-size: 18px;
+  border-radius: 13px; color: var(--text-3); font-size: 20px;
   cursor: pointer; display: flex; align-items: center; justify-content: center;
   transition: all 0.15s;
 }
@@ -295,7 +299,7 @@ body {
 .bb-attach-label { font-size: 9px; color: var(--text-4); white-space: nowrap; }
 
 .bb-attach-thumb {
-  width: 44px; height: 44px; border-radius: 10px;
+  width: 52px; height: 52px; border-radius: 12px;
   object-fit: cover; border: 2px solid var(--accent);
   cursor: pointer; flex-shrink: 0; display: none;
 }
@@ -306,8 +310,8 @@ body {
 .bb-prompt-label { font-size: 10px; color: var(--text-4); margin-bottom: 5px; display: block; }
 .bb-prompt {
   width: 100%; background: transparent; border: none; outline: none;
-  color: var(--text); font-size: 15px; font-family: inherit;
-  resize: none; line-height: 1.5; min-height: 52px; max-height: 140px;
+  color: var(--text); font-size: 16px; font-family: inherit;
+  resize: none; line-height: 1.55; min-height: 64px; max-height: 160px;
   overflow-y: auto;
 }
 .bb-prompt::placeholder { color: var(--text-4); }
@@ -324,31 +328,31 @@ body {
 
 .bb-chip {
   display: flex; align-items: center; gap: 5px;
-  padding: 7px 12px; background: var(--bg-card);
-  border: 1px solid var(--border-2); border-radius: 9px;
-  color: var(--text-2); font-size: 12px; font-weight: 500;
+  padding: 9px 14px; background: var(--bg-card);
+  border: 1px solid var(--border-2); border-radius: 10px;
+  color: var(--text-2); font-size: 13px; font-weight: 500;
   cursor: pointer; white-space: nowrap; transition: all 0.15s;
 }
 .bb-chip:hover { border-color: var(--accent); color: var(--text); }
 .bb-chip svg { width: 11px; height: 11px; color: var(--text-3); }
 
 .bb-select {
-  padding: 7px 10px; background: var(--bg-card);
-  border: 1px solid var(--border-2); border-radius: 9px;
-  color: var(--text-2); font-size: 12px; font-weight: 500;
+  padding: 9px 12px; background: var(--bg-card);
+  border: 1px solid var(--border-2); border-radius: 10px;
+  color: var(--text-2); font-size: 13px; font-weight: 500;
   cursor: pointer; outline: none; transition: all 0.15s; appearance: none;
 }
 .bb-select:hover, .bb-select:focus { border-color: var(--accent); color: var(--text); }
 .bb-select option { background: #1a1a1a; }
 
-.bb-cost { font-size: 10.5px; color: var(--text-3); white-space: nowrap; }
+.bb-cost { font-size: 12px; color: var(--text-3); white-space: nowrap; }
 .bb-cost b { color: var(--accent); font-weight: 600; }
 
 /* Generate button */
 .bb-gen {
-  padding: 13px 28px; background: var(--accent);
-  border: none; border-radius: 11px; color: #fff;
-  font-size: 15px; font-weight: 700; cursor: pointer;
+  padding: 16px 34px; background: var(--accent);
+  border: none; border-radius: 13px; color: #fff;
+  font-size: 17px; font-weight: 700; cursor: pointer;
   white-space: nowrap; transition: all 0.18s; flex-shrink: 0;
   position: relative; overflow: hidden; letter-spacing: 0.2px;
   align-self: flex-end;
@@ -757,19 +761,22 @@ const POLL_MS = 3000;
 const MAX_POLL_MS = 360000;
 
 const IMAGE_MODELS = [
-  { id:'imagen-4.0-generate-001',       name:'Imagen 4 Standard', desc:'Best quality, balanced speed for everyday use', speed:'standard', pricePerImageUSD:0.04, apiType:'imagen', badges:[] },
-  { id:'imagen-4.0-ultra-generate-001', name:'Imagen 4 Ultra',    desc:'Highest quality output for professional imagery', speed:'pro',    pricePerImageUSD:0.06, apiType:'imagen', badges:['highest-quality'] },
-  { id:'imagen-4.0-fast-generate-001',  name:'Imagen 4 Fast',     desc:'Budget-friendly rapid generation for iteration', speed:'fast',   pricePerImageUSD:0.02, apiType:'imagen', badges:['best-value'] },
-  { id:'nano-banana-2',  name:'Nano Banana 2',  emoji:'🍌', desc:'Token-based native Gemini image gen (1K img ≈ 1120 output tokens)', speed:'standard', pricePerImageUSD:0.067, inputPriceUSD:0.0011, apiType:'gemini', badges:['banana'], tokenBased:true },
-  { id:'nano-banana-pro',name:'Nano Banana Pro',emoji:'🍌', desc:'Premium token-based for complex, detailed prompts', speed:'pro', pricePerImageUSD:0.067, inputPriceUSD:0.0011, apiType:'gemini', badges:['banana'], tokenBased:true },
-  { id:'gemini-3.1-flash-image',name:'Gemini 3.1 Flash Image', desc:'Fast native generation with resolution-tiered pricing', speed:'fast', pricePerImageUSD:0.067, inputPriceUSD:0.0011, apiType:'gemini', badges:[], resolutionTiered:true, resPricing:{'512px':0.045,'1K':0.067,'2K':0.101,'4K':0.151} },
+  // ── Imagen models (predict endpoint) ──────────────────────────────────
+  { id:'imagen-3.0-generate-001',       name:'Imagen 3',          desc:'Confirmed stable model — best all-round quality via AI Studio', speed:'standard', pricePerImageUSD:0.04,  apiType:'imagen', badges:[], confirmed:true },
+  { id:'imagen-4.0-generate-001',       name:'Imagen 4 Standard', desc:'Newer generation model (preview — verify availability)', speed:'standard', pricePerImageUSD:0.04,  apiType:'imagen', badges:['preview'] },
+  { id:'imagen-4.0-ultra-generate-001', name:'Imagen 4 Ultra',    desc:'Highest quality Imagen 4 output (preview — verify availability)', speed:'pro', pricePerImageUSD:0.06, apiType:'imagen', badges:['highest-quality','preview'] },
+  { id:'imagen-4.0-fast-generate-001',  name:'Imagen 4 Fast',     desc:'Faster, cheaper Imagen 4 (preview — verify availability)', speed:'fast', pricePerImageUSD:0.02,  apiType:'imagen', badges:['best-value','preview'] },
+  // ── Gemini native image gen (generateContent endpoint) ────────────────
+  { id:'gemini-2.0-flash-exp',          name:'Gemini 2.0 Flash',  desc:'Confirmed native image generation via Gemini — best for creative, instruction-following prompts', speed:'fast', pricePerImageUSD:0.067, inputPriceUSD:0.0011, apiType:'gemini', badges:['best-value'], confirmed:true },
+  { id:'gemini-2.0-flash-preview-image-generation', name:'Gemini 2.0 Flash Image', desc:'Image-generation-specific variant of Gemini 2.0 Flash (verify availability)', speed:'fast', pricePerImageUSD:0.067, inputPriceUSD:0.0011, apiType:'gemini', badges:['preview'] },
 ];
 
 const VIDEO_MODELS = [
-  { id:'veo-3.1-generate-preview',      name:'Veo 3.1 Standard', desc:'Best cinematic quality with native audio generation', speed:'pro',      pricePerSecUSD:0.35, apiType:'veo', badges:['highest-quality','preview'] },
-  { id:'veo-3.1-fast-generate-preview', name:'Veo 3.1 Fast',     desc:'Speed-optimised while maintaining excellent quality', speed:'fast',     pricePerSecUSD:0.20, apiType:'veo', badges:['preview'] },
-  { id:'veo-3.1-lite-generate-preview', name:'Veo 3.1 Lite',     desc:'Lowest cost option, great for drafts', speed:'fast',    pricePerSecUSD:0.10, apiType:'veo', badges:['best-value','preview'] },
-  { id:'veo-2.0-generate-001',          name:'Veo 2 (Stable)',   desc:'Production-ready stable model with consistent output', speed:'standard', pricePerSecUSD:0.35, apiType:'veo', badges:[] },
+  // ── Stable ────────────────────────────────────────────────────────────
+  { id:'veo-2.0-generate-001',          name:'Veo 2 (Stable)',   desc:'Confirmed stable model — use this first. Requires paid AI Studio plan + allowlist access', speed:'standard', pricePerSecUSD:0.35, apiType:'veo', badges:[], confirmed:true },
+  // ── Preview (may require separate allowlist signup) ───────────────────
+  { id:'veo-3.0-generate-preview',      name:'Veo 3 Standard',   desc:'Cinematic quality with native audio (preview — requires allowlist)', speed:'pro',  pricePerSecUSD:0.35, apiType:'veo', badges:['highest-quality','preview'] },
+  { id:'veo-3.0-fast-generate-preview', name:'Veo 3 Fast',       desc:'Speed-optimised Veo 3 (preview — requires allowlist)', speed:'fast', pricePerSecUSD:0.20, apiType:'veo', badges:['preview'] },
 ];
 
 /* ─── STATE ─── */
@@ -789,6 +796,7 @@ const S = {
   attachBase64: null,  // source image attached via paperclip
   history: [],
   dirHandle: null,     // File System Access API directory handle
+  autoDownload: false, // Safari fallback: auto-download each generation
 };
 
 /* ─── INIT ─── */
@@ -818,7 +826,18 @@ function updateApiDot() {
 /* ─── FILE SYSTEM ACCESS ─── */
 async function selectFolder() {
   if (!('showDirectoryPicker' in window)) {
-    showToast('File saving requires Chrome with File System Access API', 'warn');
+    // Safari / Firefox fallback: enable auto-download mode
+    S.autoDownload = !S.autoDownload;
+    const btn = document.getElementById('folder-btn');
+    if (S.autoDownload) {
+      btn.classList.add('active');
+      document.getElementById('folder-btn-label').textContent = '⬇ Auto-save';
+      showToast('Auto-save enabled — each generation downloads automatically', 'ok');
+    } else {
+      btn.classList.remove('active');
+      document.getElementById('folder-btn-label').textContent = '📁 Folder';
+      showToast('Auto-save disabled', 'info');
+    }
     return;
   }
   try {
@@ -843,7 +862,17 @@ function genFolderName() {
 }
 
 async function saveToFolder(dataUrl, meta) {
-  if (!S.dirHandle || !dataUrl || !dataUrl.startsWith('data:')) return;
+  if (!dataUrl || !dataUrl.startsWith('data:')) return;
+
+  // Safari / Firefox auto-download fallback
+  if (S.autoDownload && !S.dirHandle) {
+    const ext = meta.type === 'video' ? 'mp4' : 'jpg';
+    const filename = `${genFolderName()}_${meta.type}.${ext}`;
+    dlMedia(dataUrl, filename);
+    return;
+  }
+
+  if (!S.dirHandle) return;
   try {
     const folderName = genFolderName();
     const subDir = await S.dirHandle.getDirectoryHandle(folderName, { create: true });
@@ -963,6 +992,7 @@ function renderModelGrid(type) {
 function modelCardHTML(m, type) {
   const selected = type === 'image' ? S.selImgModel === m.id : S.selVidModel === m.id;
   let badges = speedBadge(m.speed);
+  if (m.confirmed)                          badges += '<span class="badge" style="background:rgba(34,197,94,0.15);color:#4ade80;border:1px solid rgba(34,197,94,0.25)">✓ Confirmed</span>';
   if (m.badges.includes('best-value'))      badges += '<span class="badge b-best">Best Value</span>';
   if (m.badges.includes('highest-quality')) badges += '<span class="badge b-top">Highest Quality</span>';
   if (m.badges.includes('preview'))         badges += '<span class="badge b-prev">Preview</span>';
@@ -1639,17 +1669,20 @@ function clearHistory() {
 }
 
 /* ─── TOASTS ─── */
-function showToast(msg, type='info') {
+function showToast(msg, type='info', duration=4500) {
   const icons = {error:'✕',ok:'✓',info:'ℹ',warn:'⚠'};
   const classes = {error:'t-err',ok:'t-ok',warn:'t-warn',info:''};
   const el = document.createElement('div');
   el.className = 'toast '+(classes[type]||'');
-  el.innerHTML = `<span style="font-size:13px;flex-shrink:0">${icons[type]||'ℹ'}</span><span style="font-size:12px">${escHTML(msg)}</span>`;
+  // Allow HTML in msg (for clickable links in error toasts)
+  const isHtml = /<[a-z][\s\S]*>/i.test(msg);
+  const msgContent = isHtml ? msg : escHTML(msg);
+  el.innerHTML = `<span style="font-size:13px;flex-shrink:0">${icons[type]||'ℹ'}</span><span style="font-size:12px">${msgContent}</span>`;
   document.getElementById('toasts').appendChild(el);
   setTimeout(() => {
     el.style.cssText += 'opacity:0;transform:translateX(14px);transition:all 0.2s ease';
     setTimeout(() => el.remove(), 220);
-  }, 4500);
+  }, duration);
 }
 
 /* ─── UTILITIES ─── */
@@ -1658,10 +1691,37 @@ function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 async function throwIfError(res) {
   if (res.ok) return;
   let msg = `API error ${res.status}`;
-  try { const j = await res.json(); msg = j.error?.message || msg; } catch(e) {}
-  if (res.status===401||res.status===403) showToast('Invalid API key — check aistudio.google.com/apikey', 'error');
-  else if (res.status===429) showToast('Rate limit hit — wait a moment and retry', 'warn');
-  else showToast(msg, 'error');
+  let activationUrl = null;
+  try {
+    const j = await res.json();
+    msg = j.error?.message || msg;
+    // Extract activationUrl from details array (present on 403 "API not enabled" errors)
+    const details = j.error?.details || [];
+    for (const d of details) {
+      if (d.links) {
+        for (const link of d.links) {
+          if (link.url && link.url.includes('console.developers.google.com')) {
+            activationUrl = link.url;
+          }
+        }
+      }
+      if (d.metadata?.activationUrl) activationUrl = d.metadata.activationUrl;
+      if (d['@type']?.includes('ErrorInfo') && d.metadata?.activationUrl) activationUrl = d.metadata.activationUrl;
+    }
+  } catch(e) {}
+  if (res.status===401) {
+    showToast('Invalid API key — get one at aistudio.google.com/apikey', 'error');
+  } else if (res.status===403) {
+    if (activationUrl) {
+      showToast(`API not enabled — <a href="${activationUrl}" target="_blank" style="color:#93c5fd;text-decoration:underline">click here to enable it</a>`, 'error', 8000);
+    } else {
+      showToast('Access denied (403) — use an AI Studio key, not a Cloud Console key. Get one at aistudio.google.com/apikey', 'error', 7000);
+    }
+  } else if (res.status===429) {
+    showToast('Rate limit hit — wait a moment and retry', 'warn');
+  } else {
+    showToast(msg, 'error');
+  }
   throw new Error(msg);
 }
 
