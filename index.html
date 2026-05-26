@@ -732,17 +732,6 @@ body {
             <div class="char-hint"><span id="img-chars">0</span> / 2000</div>
           </div>
 
-          <!-- Count -->
-          <div>
-            <label class="field-label">Number of Images</label>
-            <div class="seg-buttons" id="img-count-btns">
-              <button class="seg-btn active" onclick="setCount(1)">1</button>
-              <button class="seg-btn" onclick="setCount(2)">2</button>
-              <button class="seg-btn" onclick="setCount(3)">3</button>
-              <button class="seg-btn" onclick="setCount(4)">4</button>
-            </div>
-          </div>
-
           <!-- Aspect Ratio -->
           <div>
             <label class="field-label">Aspect Ratio</label>
@@ -1044,7 +1033,6 @@ const S = {
   modelPickerTab: 'image',
   selImgModel: 'imagen-4.0-generate-001',
   selVidModel: 'veo-2.0-generate-001',
-  imgCount: 1,
   aspectRatio: '1:1',
   aspectClass: 'r11',
   vidDuration: 8,
@@ -1245,14 +1233,6 @@ function updateCharCount(which) {
   document.getElementById(which + '-chars').textContent = el.value.length;
 }
 
-function setCount(n) {
-  S.imgCount = n;
-  document.querySelectorAll('#img-count-btns .seg-btn').forEach((b, i) => {
-    b.classList.toggle('active', i + 1 === n);
-  });
-  updateImgCostPreview();
-}
-
 function setAspect(ratio, cls) {
   S.aspectRatio = ratio;
   S.aspectClass = cls;
@@ -1264,7 +1244,7 @@ function setAspect(ratio, cls) {
 function updateImgCostPreview() {
   const m = IMAGE_MODELS.find(x => x.id === S.selImgModel);
   if (!m) return;
-  const usd = m.pricePerImageUSD * S.imgCount;
+  const usd = m.pricePerImageUSD;
   const aud = usd * USD_TO_AUD;
   document.getElementById('img-cost-preview').textContent =
     `~$${usd.toFixed(3)} USD / ~$${aud.toFixed(3)} AUD`;
@@ -1320,45 +1300,27 @@ function removeRefImg() {
 /* ============================================================
    IMAGE GENERATION
    ============================================================ */
-async function doGenImages() {
+function doGenImages() {
   const prompt = document.getElementById('img-prompt').value.trim();
   if (!prompt) { showToast('Please enter a prompt', 'error'); return; }
   if (!S.apiKey) { showToast('Please enter your Google AI Studio API key', 'error'); return; }
 
-  const btn = document.getElementById('img-gen-btn');
-  btn.disabled = true;
-  btn.classList.add('loading');
-  btn.textContent = 'Generating…';
-
-  const ids = [];
-  for (let i = 0; i < S.imgCount; i++) {
-    const cid = ++cardId;
-    ids.push(cid);
-    prependLoadingCard('img-grid', cid, S.aspectClass);
-  }
+  const cid = ++cardId;
+  prependLoadingCard('img-grid', cid, S.aspectClass);
   updateEmptyState('img');
 
-  // Fire all in parallel — update each card as it resolves individually
   const model = IMAGE_MODELS.find(m => m.id === S.selImgModel);
   const t0 = Date.now();
 
-  const promises = ids.map(cid =>
-    callImageAPI(prompt, S.selImgModel, S.aspectRatio, S.apiKey)
-      .then(dataUrl => {
-        const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
-        const costAUD = (model.pricePerImageUSD * USD_TO_AUD).toFixed(4);
-        fillCardSuccess('img-grid', cid, dataUrl, prompt, model, costAUD, elapsed, S.aspectClass);
-        saveHistory({ type: 'image', dataUrl, prompt, model: model.name, costAUD, ts: Date.now() });
-      })
-      .catch(err => fillCardError('img-grid', cid, err.message, S.aspectClass,
-        () => retryImage(cid, prompt, S.selImgModel, S.aspectRatio, S.apiKey, model, S.aspectClass)))
-  );
-
-  await Promise.allSettled(promises);
-
-  btn.disabled = false;
-  btn.classList.remove('loading');
-  btn.textContent = '✦ Generate Images';
+  callImageAPI(prompt, S.selImgModel, S.aspectRatio, S.apiKey)
+    .then(dataUrl => {
+      const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
+      const costAUD = (model.pricePerImageUSD * USD_TO_AUD).toFixed(4);
+      fillCardSuccess('img-grid', cid, dataUrl, prompt, model, costAUD, elapsed, S.aspectClass);
+      saveHistory({ type: 'image', dataUrl, prompt, model: model.name, costAUD, ts: Date.now() });
+    })
+    .catch(err => fillCardError('img-grid', cid, err.message, S.aspectClass,
+      () => retryImage(cid, prompt, S.selImgModel, S.aspectRatio, S.apiKey, model, S.aspectClass)));
 }
 
 async function retryImage(cid, prompt, modelId, aspect, apiKey, model, aspectClass) {
