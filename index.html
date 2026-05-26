@@ -237,6 +237,83 @@ body {
 .empty-ttl { font-size: 15px; font-weight: 600; color: var(--text-2); }
 .empty-sub { font-size: 13px; max-width: 260px; line-height: 1.6; }
 
+/* ── BRAND KIT + AD STUDIO ── */
+.brand-panel, .studio-panel {
+  max-width: 720px; margin: 0 auto; padding: 32px 24px 48px;
+}
+.brand-panel-hdr { margin-bottom: 32px; }
+.brand-panel-title { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+.brand-panel-sub { color: var(--text-2); font-size: 13px; }
+.brand-section { margin-bottom: 28px; }
+.brand-section-title {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.1em; color: var(--text-3); margin-bottom: 12px;
+}
+.brand-label { font-size: 11px; color: var(--text-3); display: block; margin-bottom: 5px; }
+.brand-row { display: flex; gap: 12px; align-items: flex-start; }
+.brand-input {
+  width: 100%; background: var(--bg-card); border: 1px solid var(--border-2);
+  border-radius: 10px; color: var(--text); font-size: 14px;
+  padding: 10px 14px; outline: none; transition: border-color 0.15s;
+  font-family: inherit; resize: vertical;
+}
+.brand-input:focus { border-color: var(--accent); }
+.brand-img-slot {
+  width: 88px; height: 88px; border-radius: 10px;
+  border: 1.5px dashed var(--border-2); background: var(--bg-card);
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; cursor: pointer; position: relative;
+  overflow: hidden; transition: border-color 0.15s; flex-shrink: 0;
+}
+.brand-img-slot:hover { border-color: var(--accent); }
+.brand-img-slot img { width: 100%; height: 100%; object-fit: cover; display: none; }
+.brand-img-slot.has img { display: block; }
+.brand-img-slot.has .slot-placeholder { display: none; }
+.slot-placeholder { color: var(--text-3); text-align: center; font-size: 11px; pointer-events: none; }
+.slot-plus { font-size: 22px; margin-bottom: 2px; }
+.brand-save-btn {
+  background: var(--accent); color: white; border: none; border-radius: 10px;
+  padding: 12px 32px; font-size: 14px; font-weight: 600; cursor: pointer;
+  transition: background 0.15s;
+}
+.brand-save-btn:hover { background: var(--accent-hover); }
+
+/* Ad templates grid */
+.ad-templates { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.ad-tmpl {
+  background: var(--bg-card); border: 1.5px solid var(--border);
+  border-radius: 12px; padding: 14px 16px; cursor: pointer;
+  transition: all 0.15s; user-select: none;
+}
+.ad-tmpl:hover { border-color: var(--border-2); background: var(--bg-hover); }
+.ad-tmpl.selected { border-color: var(--accent); background: var(--accent-dim); }
+.ad-tmpl-icon { font-size: 22px; margin-bottom: 6px; }
+.ad-tmpl-name { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+.ad-tmpl-type { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-3); margin-bottom: 4px; }
+.ad-tmpl-desc { font-size: 11px; color: var(--text-3); line-height: 1.5; }
+.studio-prompt-preview { min-height: 110px; line-height: 1.7; font-size: 13px; }
+.studio-attach-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; background: var(--bg-card); border-radius: 10px;
+  border: 1px solid var(--border); margin-bottom: 16px;
+}
+.studio-attach-info {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; color: var(--text-3); flex: 1;
+}
+.studio-gen-btn {
+  width: 100%; background: var(--accent); color: white; border: none;
+  border-radius: 12px; padding: 16px; font-size: 15px; font-weight: 700;
+  cursor: pointer; transition: background 0.15s;
+}
+.studio-gen-btn:hover:not(:disabled) { background: var(--accent-hover); }
+.studio-gen-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Attach button disabled state */
+.bb-attach-btn:disabled { opacity: 0.35; cursor: not-allowed; pointer-events: none; }
+.bb-attach-btn:disabled input { pointer-events: none; }
+.bb-attach-disabled-tip { font-size: 9px; color: var(--text-3); white-space: nowrap; text-align: center; max-width: 64px; }
+
 /* ── HISTORY HEADER ── */
 .history-hdr {
   display: flex; align-items: center; justify-content: space-between;
@@ -578,6 +655,14 @@ body {
       <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="2" y="3" width="6" height="6" rx="1"/><rect x="2" y="15" width="6" height="6" rx="1"/><rect x="10" y="3" width="6" height="6" rx="1"/><rect x="10" y="15" width="6" height="6" rx="1"/><rect x="18" y="3" width="4" height="6" rx="1"/><rect x="18" y="15" width="4" height="6" rx="1"/></svg>
       Models
     </button>
+    <button class="top-tab" id="tab-brand" onclick="switchTab('brand')">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      Brand
+    </button>
+    <button class="top-tab" id="tab-studio" onclick="switchTab('studio')">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      Ad Studio
+    </button>
   </div>
 
   <div class="topbar-gap"></div>
@@ -632,6 +717,133 @@ body {
         <div class="empty-ico">📚</div>
         <div class="empty-ttl">No history yet</div>
         <div class="empty-sub">Completed generations are saved here automatically</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BRAND KIT -->
+  <div class="panel" id="panel-brand">
+    <div class="media-area" style="overflow-y:auto">
+      <div class="brand-panel">
+        <div class="brand-panel-hdr">
+          <div class="brand-panel-title">Brand Kit</div>
+          <div class="brand-panel-sub">Save your brand identity once — Ad Studio uses it to auto-generate on-brand prompts.</div>
+        </div>
+
+        <div class="brand-section">
+          <div class="brand-section-title">Identity</div>
+          <div class="brand-row" style="margin-bottom:10px">
+            <div style="flex:1">
+              <label class="brand-label">Brand Name</label>
+              <input type="text" class="brand-input" id="bk-name" placeholder="e.g. Acme Co">
+            </div>
+            <div style="flex:1">
+              <label class="brand-label">Primary Color</label>
+              <div style="display:flex;gap:8px;align-items:center">
+                <input type="color" id="bk-color" value="#6366f1" oninput="syncColorHex(this.value)" style="width:38px;height:38px;border-radius:8px;border:1px solid var(--border-2);background:none;cursor:pointer;padding:2px;flex-shrink:0">
+                <input type="text" class="brand-input" id="bk-color-hex" placeholder="#6366f1" style="font-family:monospace;font-size:13px" oninput="syncColorPicker(this.value)">
+              </div>
+            </div>
+          </div>
+          <div style="margin-bottom:10px">
+            <label class="brand-label">Brand Description</label>
+            <textarea class="brand-input" id="bk-desc" rows="3" placeholder="What does your brand stand for? What makes it unique? What's the target audience?"></textarea>
+          </div>
+          <div>
+            <label class="brand-label">Tone of Voice</label>
+            <select class="brand-input" id="bk-tone">
+              <option value="professional">Professional</option>
+              <option value="casual">Casual &amp; Friendly</option>
+              <option value="luxury">Luxury &amp; Premium</option>
+              <option value="playful">Playful &amp; Fun</option>
+              <option value="energetic">Energetic &amp; Bold</option>
+              <option value="minimalist">Clean &amp; Minimalist</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="brand-section">
+          <div class="brand-section-title">Logo</div>
+          <div class="brand-img-slot" id="bk-logo-slot" onclick="triggerBrandImg('bk-logo-input')" title="Click to upload logo">
+            <input type="file" id="bk-logo-input" accept="image/*" style="display:none" onchange="handleBrandImg(event,'logo',0)">
+            <img id="bk-logo-img" src="" alt="">
+            <div class="slot-placeholder"><div class="slot-plus">+</div><div>Logo</div></div>
+          </div>
+        </div>
+
+        <div class="brand-section">
+          <div class="brand-section-title">Brand Reference Images <span style="font-weight:400;color:var(--text-3)">(up to 3 — lifestyle, campaigns, mood)</span></div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <div class="brand-img-slot" id="bk-ref-slot-0" onclick="triggerBrandImg('bk-ref-input-0')"><input type="file" id="bk-ref-input-0" accept="image/*" style="display:none" onchange="handleBrandImg(event,'refs',0)"><img id="bk-ref-img-0" src="" alt=""><div class="slot-placeholder"><div class="slot-plus">+</div><div>Reference</div></div></div>
+            <div class="brand-img-slot" id="bk-ref-slot-1" onclick="triggerBrandImg('bk-ref-input-1')"><input type="file" id="bk-ref-input-1" accept="image/*" style="display:none" onchange="handleBrandImg(event,'refs',1)"><img id="bk-ref-img-1" src="" alt=""><div class="slot-placeholder"><div class="slot-plus">+</div><div>Reference</div></div></div>
+            <div class="brand-img-slot" id="bk-ref-slot-2" onclick="triggerBrandImg('bk-ref-input-2')"><input type="file" id="bk-ref-input-2" accept="image/*" style="display:none" onchange="handleBrandImg(event,'refs',2)"><img id="bk-ref-img-2" src="" alt=""><div class="slot-placeholder"><div class="slot-plus">+</div><div>Reference</div></div></div>
+          </div>
+        </div>
+
+        <div class="brand-section">
+          <div class="brand-section-title">Product Images <span style="font-weight:400;color:var(--text-3)">(up to 5 — Ad Studio attaches the first one as reference)</span></div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <div class="brand-img-slot" id="bk-prod-slot-0" onclick="triggerBrandImg('bk-prod-input-0')"><input type="file" id="bk-prod-input-0" accept="image/*" style="display:none" onchange="handleBrandImg(event,'products',0)"><img id="bk-prod-img-0" src="" alt=""><div class="slot-placeholder"><div class="slot-plus">+</div><div>Product</div></div></div>
+            <div class="brand-img-slot" id="bk-prod-slot-1" onclick="triggerBrandImg('bk-prod-input-1')"><input type="file" id="bk-prod-input-1" accept="image/*" style="display:none" onchange="handleBrandImg(event,'products',1)"><img id="bk-prod-img-1" src="" alt=""><div class="slot-placeholder"><div class="slot-plus">+</div><div>Product</div></div></div>
+            <div class="brand-img-slot" id="bk-prod-slot-2" onclick="triggerBrandImg('bk-prod-input-2')"><input type="file" id="bk-prod-input-2" accept="image/*" style="display:none" onchange="handleBrandImg(event,'products',2)"><img id="bk-prod-img-2" src="" alt=""><div class="slot-placeholder"><div class="slot-plus">+</div><div>Product</div></div></div>
+            <div class="brand-img-slot" id="bk-prod-slot-3" onclick="triggerBrandImg('bk-prod-input-3')"><input type="file" id="bk-prod-input-3" accept="image/*" style="display:none" onchange="handleBrandImg(event,'products',3)"><img id="bk-prod-img-3" src="" alt=""><div class="slot-placeholder"><div class="slot-plus">+</div><div>Product</div></div></div>
+            <div class="brand-img-slot" id="bk-prod-slot-4" onclick="triggerBrandImg('bk-prod-input-4')"><input type="file" id="bk-prod-input-4" accept="image/*" style="display:none" onchange="handleBrandImg(event,'products',4)"><img id="bk-prod-img-4" src="" alt=""><div class="slot-placeholder"><div class="slot-plus">+</div><div>Product</div></div></div>
+          </div>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end">
+          <button class="brand-save-btn" onclick="saveBrandKit()">Save Brand Kit</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AD STUDIO -->
+  <div class="panel" id="panel-studio">
+    <div class="media-area" style="overflow-y:auto">
+      <div class="studio-panel">
+        <div class="brand-panel-hdr">
+          <div class="brand-panel-title">Ad Studio</div>
+          <div class="brand-panel-sub">Enter your product details, pick a format — we'll build the prompt from your brand kit and generate it.</div>
+        </div>
+
+        <div class="brand-section">
+          <div class="brand-section-title">Product</div>
+          <div class="brand-row" style="margin-bottom:10px">
+            <div style="flex:1">
+              <label class="brand-label">Product Name</label>
+              <input type="text" class="brand-input" id="st-product-name" placeholder="e.g. Matte Lip Gloss" oninput="rebuildStudioPrompt()">
+            </div>
+            <div style="flex:1">
+              <label class="brand-label">Product URL <span style="font-weight:400;color:var(--text-3)">(optional — context only)</span></label>
+              <input type="text" class="brand-input" id="st-product-url" placeholder="https://…" oninput="rebuildStudioPrompt()">
+            </div>
+          </div>
+          <div>
+            <label class="brand-label">Product Description</label>
+            <textarea class="brand-input" id="st-product-desc" rows="2" placeholder="Key features, benefits, materials, what makes it special…" oninput="rebuildStudioPrompt()"></textarea>
+          </div>
+        </div>
+
+        <div class="brand-section">
+          <div class="brand-section-title">Ad Format</div>
+          <div class="ad-templates" id="ad-templates-grid"></div>
+        </div>
+
+        <div class="brand-section">
+          <div class="brand-section-title">Generated Prompt <span style="font-weight:400;color:var(--text-3)">(editable)</span></div>
+          <textarea class="brand-input studio-prompt-preview" id="st-prompt-preview" rows="5" placeholder="Select a format above to generate a prompt…"></textarea>
+        </div>
+
+        <div class="studio-attach-row" id="st-attach-row">
+          <div class="studio-attach-info" id="st-attach-info">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span id="st-attach-label">No product image saved in brand kit — add one in the Brand tab for best results</span>
+          </div>
+          <img id="st-attach-thumb" src="" alt="" style="display:none;width:52px;height:52px;border-radius:10px;object-fit:cover;border:1px solid var(--border-2)">
+        </div>
+
+        <button class="studio-gen-btn" id="st-gen-btn" onclick="generateFromStudio()" disabled>Generate Ad</button>
       </div>
     </div>
   </div>
@@ -762,25 +974,25 @@ const MAX_POLL_MS = 360000;
 
 const IMAGE_MODELS = [
   // ── Imagen models (predict endpoint) ──────────────────────────────────
-  { id:'imagen-4.0-generate-001',        name:'Imagen 4',            desc:'Imagen 4 standard quality via AI Studio', speed:'standard', pricePerImageUSD:0.04,  apiType:'imagen', badges:[], confirmed:true },
-  { id:'imagen-4.0-ultra-generate-001',  name:'Imagen 4 Ultra',      desc:'Highest quality Imagen 4 output', speed:'pro', pricePerImageUSD:0.06, apiType:'imagen', badges:['highest-quality'], confirmed:true },
-  { id:'imagen-4.0-fast-generate-001',   name:'Imagen 4 Fast',       desc:'Faster, cheaper Imagen 4', speed:'fast', pricePerImageUSD:0.02, apiType:'imagen', badges:['best-value'], confirmed:true },
+  { id:'imagen-4.0-generate-001',        name:'Imagen 4',         desc:'Imagen 4 standard quality via AI Studio', speed:'standard', pricePerImageUSD:0.04,  apiType:'imagen', badges:[], confirmed:true, supportsImageInput:true },
+  { id:'imagen-4.0-ultra-generate-001',  name:'Imagen 4 Ultra',   desc:'Highest quality Imagen 4 output', speed:'pro', pricePerImageUSD:0.06, apiType:'imagen', badges:['highest-quality'], confirmed:true, supportsImageInput:true },
+  { id:'imagen-4.0-fast-generate-001',   name:'Imagen 4 Fast',    desc:'Faster text-to-image only — does not support image input', speed:'fast', pricePerImageUSD:0.02, apiType:'imagen', badges:['best-value'], confirmed:true, supportsImageInput:false },
   // ── Gemini native image gen (generateContent endpoint) ────────────────
-  { id:'gemini-2.5-flash-image',               name:'Gemini 2.5 Flash Image',   desc:'Gemini 2.5 Flash preview image generation', speed:'fast', pricePerImageUSD:0.067, inputPriceUSD:0.0011, apiType:'gemini', badges:['preview'], confirmed:true },
-  { id:'gemini-3-pro-image-preview',           name:'Gemini 3 Pro Image',        desc:'Gemini 3 Pro image generation preview', speed:'standard', pricePerImageUSD:0.067, inputPriceUSD:0.0011, apiType:'gemini', badges:['preview','highest-quality'], confirmed:true },
-  { id:'gemini-3.1-flash-image-preview',       name:'Gemini 3.1 Flash Image',    desc:'Gemini 3.1 Flash image generation preview', speed:'fast', pricePerImageUSD:0.067, inputPriceUSD:0.0011, apiType:'gemini', badges:['preview'], confirmed:true },
+  { id:'gemini-2.5-flash-image',         name:'Nano Banana',      desc:'Gemini 2.5 Flash preview image generation — supports image input for editing', speed:'fast', pricePerImageUSD:0.067, inputPriceUSD:0.0011, apiType:'gemini', badges:['preview'], confirmed:true, supportsImageInput:true },
+  { id:'gemini-3-pro-image-preview',     name:'Nano Banana Pro',  desc:'Gemini 3 Pro image generation preview — supports image input for editing', speed:'standard', pricePerImageUSD:0.067, inputPriceUSD:0.0011, apiType:'gemini', badges:['preview','highest-quality'], confirmed:true, supportsImageInput:true },
+  { id:'gemini-3.1-flash-image-preview', name:'Nano Banana 2',    desc:'Gemini 3.1 Flash image generation preview — supports image input for editing', speed:'fast', pricePerImageUSD:0.067, inputPriceUSD:0.0011, apiType:'gemini', badges:['preview'], confirmed:true, supportsImageInput:true },
 ];
 
 const VIDEO_MODELS = [
   // ── Veo 2 ─────────────────────────────────────────────────────────────
-  { id:'veo-2.0-generate-001',           name:'Veo 2',           desc:'Stable Veo 2 model. Requires billing enabled on your Google Cloud account.', speed:'standard', pricePerSecUSD:0.35, apiType:'veo', badges:[], confirmed:true },
+  { id:'veo-2.0-generate-001',           name:'Veo 2',          desc:'Stable Veo 2 model. Requires billing enabled on your Google Cloud account. Supports image-to-video.', speed:'standard', pricePerSecUSD:0.35, apiType:'veo', badges:[], confirmed:true, supportsImageInput:true },
   // ── Veo 3 ─────────────────────────────────────────────────────────────
-  { id:'veo-3.0-generate-001',           name:'Veo 3',           desc:'Cinematic quality with native audio generation', speed:'pro', pricePerSecUSD:0.35, apiType:'veo', badges:['highest-quality'], confirmed:true },
-  { id:'veo-3.0-fast-generate-001',      name:'Veo 3 Fast',      desc:'Speed-optimised Veo 3', speed:'fast', pricePerSecUSD:0.20, apiType:'veo', badges:['best-value'], confirmed:true },
+  { id:'veo-3.0-generate-001',           name:'Veo 3',          desc:'Cinematic quality with native audio generation. Supports image-to-video.', speed:'pro', pricePerSecUSD:0.35, apiType:'veo', badges:['highest-quality'], confirmed:true, supportsImageInput:true },
+  { id:'veo-3.0-fast-generate-001',      name:'Veo 3 Fast',     desc:'Speed-optimised Veo 3. Supports image-to-video.', speed:'fast', pricePerSecUSD:0.20, apiType:'veo', badges:['best-value'], confirmed:true, supportsImageInput:true },
   // ── Veo 3.1 ───────────────────────────────────────────────────────────
-  { id:'veo-3.1-generate-preview',       name:'Veo 3.1',         desc:'Latest Veo 3.1 preview', speed:'pro', pricePerSecUSD:0.35, apiType:'veo', badges:['preview'], confirmed:true },
-  { id:'veo-3.1-fast-generate-preview',  name:'Veo 3.1 Fast',    desc:'Speed-optimised Veo 3.1 preview', speed:'fast', pricePerSecUSD:0.20, apiType:'veo', badges:['preview'], confirmed:true },
-  { id:'veo-3.1-lite-generate-preview',  name:'Veo 3.1 Lite',    desc:'Lightweight Veo 3.1 preview', speed:'fast', pricePerSecUSD:0.12, apiType:'veo', badges:['preview','best-value'], confirmed:true },
+  { id:'veo-3.1-generate-preview',       name:'Veo 3.1',        desc:'Latest Veo 3.1 preview. Supports image-to-video.', speed:'pro', pricePerSecUSD:0.35, apiType:'veo', badges:['preview'], confirmed:true, supportsImageInput:true },
+  { id:'veo-3.1-fast-generate-preview',  name:'Veo 3.1 Fast',   desc:'Speed-optimised Veo 3.1 preview. Supports image-to-video.', speed:'fast', pricePerSecUSD:0.20, apiType:'veo', badges:['preview'], confirmed:true, supportsImageInput:true },
+  { id:'veo-3.1-lite-generate-preview',  name:'Veo 3.1 Lite',   desc:'Lightweight Veo 3.1 — text-to-video only, no image reference support.', speed:'fast', pricePerSecUSD:0.12, apiType:'veo', badges:['preview','best-value'], confirmed:true, supportsImageInput:false },
 ];
 
 /* ─── STATE ─── */
@@ -803,6 +1015,176 @@ const S = {
   autoDownload: false, // Safari fallback: auto-download each generation
 };
 
+/* ─── BRAND KIT ─── */
+const B = { name:'', desc:'', tone:'professional', primaryColor:'#6366f1', logo:null, refs:[null,null,null], products:[null,null,null,null,null] };
+
+function loadBrandKit() {
+  try { const saved = JSON.parse(localStorage.getItem('hgs_brand') || '{}'); Object.assign(B, saved); } catch(e) {}
+}
+
+function saveBrandKit() {
+  B.name        = document.getElementById('bk-name').value.trim();
+  B.desc        = document.getElementById('bk-desc').value.trim();
+  B.tone        = document.getElementById('bk-tone').value;
+  B.primaryColor= document.getElementById('bk-color-hex').value.trim() || document.getElementById('bk-color').value;
+  localStorage.setItem('hgs_brand', JSON.stringify(B));
+  showToast('Brand kit saved', 'ok');
+  renderAdTemplates();
+}
+
+function loadBrandKitUI() {
+  document.getElementById('bk-name').value  = B.name  || '';
+  document.getElementById('bk-desc').value  = B.desc  || '';
+  document.getElementById('bk-tone').value  = B.tone  || 'professional';
+  const col = B.primaryColor || '#6366f1';
+  document.getElementById('bk-color').value     = col;
+  document.getElementById('bk-color-hex').value = col;
+  // Logo
+  if (B.logo) { const el = document.getElementById('bk-logo-slot'); el.classList.add('has'); document.getElementById('bk-logo-img').src = B.logo; }
+  // Refs
+  (B.refs||[]).forEach((r,i) => { if (r) { const sl = document.getElementById(`bk-ref-slot-${i}`); sl?.classList.add('has'); const img = document.getElementById(`bk-ref-img-${i}`); if (img) img.src = r; }});
+  // Products
+  (B.products||[]).forEach((p,i) => { if (p) { const sl = document.getElementById(`bk-prod-slot-${i}`); sl?.classList.add('has'); const img = document.getElementById(`bk-prod-img-${i}`); if (img) img.src = p; }});
+}
+
+function triggerBrandImg(inputId) { document.getElementById(inputId)?.click(); }
+
+function handleBrandImg(event, field, index) {
+  const file = event.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const data = e.target.result;
+    if (field === 'logo') {
+      B.logo = data;
+      document.getElementById('bk-logo-slot').classList.add('has');
+      document.getElementById('bk-logo-img').src = data;
+    } else if (field === 'refs') {
+      if (!B.refs) B.refs = [null,null,null];
+      B.refs[index] = data;
+      const sl = document.getElementById(`bk-ref-slot-${index}`); if (sl) sl.classList.add('has');
+      const img = document.getElementById(`bk-ref-img-${index}`); if (img) img.src = data;
+    } else if (field === 'products') {
+      if (!B.products) B.products = [null,null,null,null,null];
+      B.products[index] = data;
+      const sl = document.getElementById(`bk-prod-slot-${index}`); if (sl) sl.classList.add('has');
+      const img = document.getElementById(`bk-prod-img-${index}`); if (img) img.src = data;
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+function syncColorHex(val) { document.getElementById('bk-color-hex').value = val; }
+function syncColorPicker(val) { if (/^#[0-9a-fA-F]{6}$/.test(val)) document.getElementById('bk-color').value = val; }
+
+/* ─── AD STUDIO ─── */
+const AD_TEMPLATES = [
+  { id:'product-shot', name:'Product Shot', icon:'📦', type:'image', aspect:'1:1', aspectClass:'r11',
+    desc:'Clean product on white/minimal background',
+    build(b,p) { return `Professional product photography of ${p.name}${p.desc?' — '+p.desc:''}. Clean white studio background, commercial quality, sharp focus, well lit, product centred.${b.name?' Brand: '+b.name+'.':''}${b.tone?' Style: '+b.tone+'.':''}`; }
+  },
+  { id:'lifestyle', name:'Lifestyle Photo', icon:'🌟', type:'image', aspect:'4:3', aspectClass:'r43',
+    desc:'Product in an aspirational real-life setting',
+    build(b,p) { return `Lifestyle product photography. ${p.name}${p.desc?' ('+p.desc+')':''} shown in use in a beautiful, aspirational setting. Natural light, editorial quality, ${b.tone?.toLowerCase()||'premium'} aesthetic.${b.name?' Brand: '+b.name+'.':''}`; }
+  },
+  { id:'banner', name:'Banner Ad', icon:'📢', type:'image', aspect:'16:9', aspectClass:'r169',
+    desc:'Wide marketing banner with space for copy',
+    build(b,p) { return `Digital marketing banner advertisement. ${p.name}${p.desc?' — '+p.desc:''}. Wide 16:9 format, striking composition, room for headline text overlay.${b.primaryColor?' Colour palette: '+b.primaryColor+'.':''} Bold, commercial advertising aesthetic.${b.name?' '+b.name+' brand.':''}`; }
+  },
+  { id:'ugc-video', name:'UGC Video', icon:'🎥', type:'video', aspect:'9:16', aspectClass:'r916',
+    desc:'Authentic person-to-camera product review',
+    build(b,p) { return `UGC-style product review video. A person holding and enthusiastically demonstrating ${p.name}${p.desc?' ('+p.desc+')':''} in a casual home setting. Natural feel, handheld camera, talking directly to camera, genuine enthusiasm. Vertical format for social media.`; }
+  },
+  { id:'demo', name:'Product Demo', icon:'✨', type:'video', aspect:'16:9', aspectClass:'r169',
+    desc:'Cinematic product feature showcase',
+    build(b,p) { return `Cinematic product demonstration video. ${p.name}${p.desc?' — '+p.desc:''}. Smooth camera movements showcasing key features, elegant transitions, professional lighting. ${b.tone?.toLowerCase()||'Premium'} brand aesthetic.${b.name?' For '+b.name+'.':''}`; }
+  },
+  { id:'social-reel', name:'Social Reel', icon:'📱', type:'video', aspect:'9:16', aspectClass:'r916',
+    desc:'Short vertical video for Instagram & TikTok',
+    build(b,p) { return `Short-form vertical social media reel. Dynamic, attention-grabbing showcase of ${p.name}${p.desc?' ('+p.desc+')':''}. Fast cuts, trendy aesthetic, designed for Instagram Reels / TikTok. ${b.tone?.toLowerCase()||'Energetic'} vibe.`; }
+  },
+];
+
+let studioSelTemplate = null;
+
+function renderAdTemplates() {
+  const grid = document.getElementById('ad-templates-grid'); if (!grid) return;
+  grid.innerHTML = AD_TEMPLATES.map(t => `
+    <div class="ad-tmpl${studioSelTemplate===t.id?' selected':''}" onclick="selectAdTemplate('${t.id}')">
+      <div class="ad-tmpl-icon">${t.icon}</div>
+      <div class="ad-tmpl-name">${t.name}</div>
+      <div class="ad-tmpl-type">${t.type === 'video' ? '▶ Video' : '🖼 Image'}</div>
+      <div class="ad-tmpl-desc">${t.desc}</div>
+    </div>`).join('');
+
+  // Show product image in attach row
+  const firstProd = (B.products||[]).find(Boolean);
+  const thumb = document.getElementById('st-attach-thumb');
+  const label = document.getElementById('st-attach-label');
+  if (firstProd && thumb && label) {
+    thumb.src = firstProd; thumb.style.display = 'block';
+    label.textContent = 'First product image from brand kit will be attached as reference';
+  } else if (label) {
+    if (thumb) thumb.style.display = 'none';
+    label.textContent = 'No product image in brand kit — add one in the Brand tab for best results';
+  }
+}
+
+function selectAdTemplate(id) {
+  studioSelTemplate = id;
+  document.querySelectorAll('.ad-tmpl').forEach(el => el.classList.toggle('selected', el.onclick?.toString().includes(`'${id}'`)));
+  rebuildStudioPrompt();
+}
+
+function rebuildStudioPrompt() {
+  const tmpl = AD_TEMPLATES.find(t => t.id === studioSelTemplate);
+  const genBtn = document.getElementById('st-gen-btn'); if (!genBtn) return;
+  if (!tmpl) { genBtn.disabled = true; return; }
+  const product = {
+    name: document.getElementById('st-product-name')?.value.trim() || 'the product',
+    desc: document.getElementById('st-product-desc')?.value.trim() || '',
+    url:  document.getElementById('st-product-url')?.value.trim()  || '',
+  };
+  const preview = document.getElementById('st-prompt-preview');
+  if (preview) preview.value = tmpl.build(B, product);
+  genBtn.disabled = false;
+  genBtn.textContent = `Generate ${tmpl.type === 'video' ? 'Video' : 'Image'} Ad →`;
+}
+
+function generateFromStudio() {
+  const tmpl = AD_TEMPLATES.find(t => t.id === studioSelTemplate); if (!tmpl) return;
+  const prompt = document.getElementById('st-prompt-preview')?.value.trim(); if (!prompt) return;
+
+  // Set attach image to first available product image if model supports it
+  const firstProd = (B.products||[]).find(Boolean);
+
+  // Switch to appropriate tab
+  if (tmpl.type === 'video') {
+    switchTab('videos');
+    document.getElementById('bb-prompt').value = prompt;
+    autoResize(document.getElementById('bb-prompt'));
+    if (firstProd) { S.attachBase64 = firstProd; /* video ref */ }
+    setTimeout(() => doGenVideo(), 100);
+  } else {
+    switchTab('images');
+    document.getElementById('bb-prompt').value = prompt;
+    autoResize(document.getElementById('bb-prompt'));
+    S.aspectRatio = tmpl.aspect;
+    S.aspectClass  = tmpl.aspectClass;
+    const aspectSel = document.getElementById('bb-aspect');
+    if (aspectSel) aspectSel.value = tmpl.aspect;
+    // Attach first product image if model supports it
+    const imgModel = IMAGE_MODELS.find(m => m.id === S.selImgModel);
+    if (firstProd && imgModel?.supportsImageInput) {
+      S.attachBase64 = firstProd;
+      const thumb = document.getElementById('bb-attach-thumb');
+      if (thumb) { thumb.src = firstProd; thumb.classList.add('has'); }
+      document.getElementById('bb-attach-btn').style.display = 'none';
+      document.querySelector('.bb-attach-label').textContent = 'Attached';
+    }
+    setTimeout(() => doGenImage(), 100);
+  }
+}
+
 /* ─── INIT ─── */
 function init() {
   S.apiKey = localStorage.getItem('hgs_apikey') || '';
@@ -815,6 +1197,7 @@ function init() {
     updateApiDot();
   });
   try { S.history = JSON.parse(localStorage.getItem('hgs_history') || '[]'); } catch(e) { S.history = []; }
+  loadBrandKit();
   renderModelGrid('image');
   renderModelGrid('video');
   updateBottomBar();
@@ -922,11 +1305,13 @@ function dataUrlToBlob(dataUrl) {
 /* ─── TAB SWITCHING ─── */
 function switchTab(tab) {
   S.tab = tab;
-  ['images','videos','history'].forEach(t => {
-    document.getElementById('panel-' + t).classList.toggle('active', t === tab);
-    document.getElementById('tab-' + t).classList.toggle('active', t === tab);
+  ['images','videos','history','brand','studio'].forEach(t => {
+    document.getElementById('panel-' + t)?.classList.toggle('active', t === tab);
+    document.getElementById('tab-' + t)?.classList.toggle('active', t === tab);
   });
   if (tab === 'history') renderHistory();
+  if (tab === 'studio') renderAdTemplates();
+  if (tab === 'brand') loadBrandKitUI();
   updateBottomBar();
   updateCostPreview();
 }
@@ -934,18 +1319,30 @@ function switchTab(tab) {
 /* ─── BOTTOM BAR ─── */
 function updateBottomBar() {
   const isVid = S.tab === 'videos';
-  const isHist = S.tab === 'history';
+  const isPanel = S.tab === 'history' || S.tab === 'brand' || S.tab === 'studio';
 
-  document.getElementById('bottom-bar').style.display = isHist ? 'none' : 'block';
-  document.getElementById('bb-img-opts').style.display = (!isVid && !isHist) ? 'flex' : 'none';
+  document.getElementById('bottom-bar').style.display = isPanel ? 'none' : 'block';
+  document.getElementById('bb-img-opts').style.display = (!isVid && !isPanel) ? 'flex' : 'none';
   document.getElementById('bb-vid-opts').style.display = isVid ? 'flex' : 'none';
 
   const model = isVid
     ? VIDEO_MODELS.find(m => m.id === S.selVidModel)
     : IMAGE_MODELS.find(m => m.id === S.selImgModel);
+
   if (model) {
-    const n = model.emoji ? `${model.name} ${model.emoji}` : model.name;
-    document.getElementById('bb-model-name').textContent = n;
+    document.getElementById('bb-model-name').textContent = model.name;
+
+    // Disable attach button if model doesn't support image input
+    const attachBtn = document.getElementById('bb-attach-btn');
+    const attachLabel = document.querySelector('.bb-attach-label');
+    if (attachBtn) {
+      const supported = model.supportsImageInput !== false;
+      attachBtn.disabled = !supported;
+      if (attachLabel) attachLabel.textContent = supported ? 'Attach' : 'No input';
+      attachBtn.title = supported ? 'Attach source image' : `${model.name} does not support image input`;
+      // Auto-clear attach if current model can't use it
+      if (!supported && S.attachBase64) removeAttach();
+    }
   }
   updateGenBtn();
 }
@@ -1001,6 +1398,8 @@ function modelCardHTML(m, type) {
   if (m.badges.includes('highest-quality')) badges += '<span class="badge b-top">Highest Quality</span>';
   if (m.badges.includes('preview'))         badges += '<span class="badge b-prev">Preview</span>';
   if (m.badges.includes('banana'))          badges += '<span class="badge b-bana">🍌 Banana</span>';
+  if (m.supportsImageInput)                 badges += '<span class="badge" style="background:rgba(99,102,241,0.1);color:#a5b4fc;border:1px solid rgba(99,102,241,0.25)">⊕ Image Input</span>';
+  else                                      badges += '<span class="badge" style="background:rgba(100,100,100,0.1);color:#666;border:1px solid rgba(100,100,100,0.2)">Text Only</span>';
 
   let pricing = '';
   if (type === 'image') {
