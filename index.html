@@ -13,33 +13,22 @@
   ║  1. Open this file directly in Chrome / Edge (no server needed)      ║
   ║  2. Get a free API key at: https://aistudio.google.com/apikey        ║
   ║  3. Paste your API key in the top-right field — it saves auto        ║
-  ║  4. Click "Select Model" to choose image or video model              ║
-  ║  5. Type a prompt → click Generate                                    ║
+  ║  4. Click the model chip in the bottom bar to change model           ║
+  ║  5. Type a prompt → click Generate (click multiple times to queue)   ║
   ║                                                                       ║
-  ║  MODELS NOTES:                                                        ║
-  ║  • Imagen 4 models — available via Google AI Studio API              ║
-  ║  • Veo 2/3 models  — may require waitlist / preview access           ║
-  ║  • Nano Banana & Gemini Flash Image — experimental model IDs         ║
-  ║    listed in Google docs; verify at ai.google.dev/gemini-api/docs    ║
-  ║                                                                       ║
-  ║  PRICING: Estimates shown in AUD (1 USD ≈ 1.58 AUD, approximate)    ║
-  ║  Verify at: https://ai.google.dev/gemini-api/docs/pricing            ║
+  ║  PRICING: Estimates in AUD (1 USD ≈ 1.58 AUD, approximate)          ║
   ╚══════════════════════════════════════════════════════════════════════╝
 -->
 <style>
-/* ============================================================
-   RESET & VARIABLES
-   ============================================================ */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
   --bg: #0a0a0a;
   --bg-card: #111111;
-  --bg-card-2: #141414;
   --bg-hover: #161616;
   --bg-modal: #0d0d0d;
   --border: #1e1e1e;
-  --border-2: #252525;
+  --border-2: #2a2a2a;
   --accent: #6366f1;
   --accent-dim: rgba(99,102,241,0.12);
   --accent-border: rgba(99,102,241,0.25);
@@ -47,13 +36,13 @@
   --text: #f5f5f5;
   --text-2: #a0a0a0;
   --text-3: #606060;
-  --text-4: #3a3a3a;
+  --text-4: #333333;
   --success: #22c55e;
   --error: #ef4444;
-  --warning: #f59e0b;
-  --sidebar: 224px;
-  --topbar: 56px;
-  --tabbar: 44px;
+  --sidebar: 200px;
+  --topbar: 52px;
+  --tabbar: 40px;
+  --bottombar: 80px;
 }
 
 html, body { height: 100%; overflow: hidden; }
@@ -67,17 +56,12 @@ body {
   line-height: 1.5;
 }
 
-/* ============================================================
-   SCROLLBAR
-   ============================================================ */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 2px; }
 ::-webkit-scrollbar-thumb:hover { background: #383838; }
 
-/* ============================================================
-   SIDEBAR
-   ============================================================ */
+/* ── SIDEBAR ── */
 .sidebar {
   width: var(--sidebar);
   min-width: var(--sidebar);
@@ -86,8 +70,6 @@ body {
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
-  position: sticky;
-  top: 0;
   flex-shrink: 0;
   z-index: 100;
 }
@@ -103,20 +85,18 @@ body {
 }
 
 .logo-mark {
-  width: 30px; height: 30px;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-  border-radius: 8px;
+  width: 28px; height: 28px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  border-radius: 7px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 15px; flex-shrink: 0;
-  box-shadow: 0 0 16px rgba(99,102,241,0.3);
+  font-size: 14px; flex-shrink: 0;
+  box-shadow: 0 0 14px rgba(99,102,241,0.28);
 }
 
-.logo-name {
-  font-size: 15px; font-weight: 700; letter-spacing: -0.4px;
-}
+.logo-name { font-size: 15px; font-weight: 700; letter-spacing: -0.4px; }
 .logo-name em { color: var(--accent); font-style: normal; }
 
-.sidebar-nav { padding: 10px 8px; flex: 1; overflow-y: auto; }
+.sidebar-nav { padding: 10px 8px; flex: 1; }
 
 .nav-label {
   font-size: 9px; font-weight: 700; text-transform: uppercase;
@@ -126,71 +106,44 @@ body {
 
 .nav-btn {
   display: flex; align-items: center; gap: 9px;
-  width: 100%; padding: 9px 10px; border-radius: 8px;
+  width: 100%; padding: 8px 10px; border-radius: 8px;
   cursor: pointer; color: var(--text-3); font-size: 13px; font-weight: 500;
   border: 1px solid transparent; background: none;
   transition: all 0.15s; margin-bottom: 2px; text-align: left;
 }
 .nav-btn:hover { background: var(--border); color: var(--text-2); }
-.nav-btn.active {
-  background: var(--accent-dim); color: var(--text);
-  border-color: var(--accent-border);
-}
-.nav-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
+.nav-btn.active { background: var(--accent-dim); color: var(--text); border-color: var(--accent-border); }
+.nav-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
 
-.sidebar-footer {
-  padding: 12px 8px; border-top: 1px solid var(--border); flex-shrink: 0;
-}
+.sidebar-footer { padding: 10px 8px; border-top: 1px solid var(--border); flex-shrink: 0; }
 
-/* ============================================================
-   MAIN LAYOUT
-   ============================================================ */
+/* ── MAIN ── */
 .main {
   flex: 1; display: flex; flex-direction: column;
-  height: 100vh; overflow: hidden; min-width: 0;
+  height: 100vh; overflow: hidden; min-width: 0; position: relative;
 }
 
-/* ============================================================
-   TOPBAR
-   ============================================================ */
+/* ── TOPBAR ── */
 .topbar {
   height: var(--topbar); flex-shrink: 0;
-  display: flex; align-items: center; gap: 12px;
-  padding: 0 20px; background: #080808;
+  display: flex; align-items: center; gap: 10px;
+  padding: 0 18px; background: #080808;
   border-bottom: 1px solid var(--border);
+  z-index: 50;
 }
-
-.model-pill {
-  display: flex; align-items: center; gap: 8px;
-  padding: 6px 12px; background: var(--bg-card);
-  border: 1px solid var(--border); border-radius: 8px;
-  cursor: pointer; font-size: 13px; font-weight: 500;
-  transition: all 0.15s; white-space: nowrap; color: var(--text);
-}
-.model-pill:hover { border-color: var(--accent); background: var(--accent-dim); }
-.model-pill svg { width: 13px; height: 13px; color: var(--text-3); }
-
-.speed-chip {
-  font-size: 9px; padding: 2px 6px; border-radius: 4px;
-  font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px;
-}
-.chip-fast { background: rgba(34,197,94,0.12); color: #4ade80; }
-.chip-standard { background: rgba(99,102,241,0.12); color: #818cf8; }
-.chip-pro { background: rgba(245,158,11,0.12); color: #fbbf24; }
 
 .topbar-gap { flex: 1; }
 
 .apikey-wrap { display: flex; align-items: center; gap: 8px; }
-
 .apikey-dot {
   width: 7px; height: 7px; border-radius: 50%;
   background: var(--text-4); flex-shrink: 0; transition: background 0.3s;
 }
-.apikey-dot.ok { background: var(--success); box-shadow: 0 0 6px rgba(34,197,94,0.4); }
+.apikey-dot.ok  { background: var(--success); box-shadow: 0 0 6px rgba(34,197,94,0.4); }
 .apikey-dot.bad { background: var(--error); }
 
 .apikey-input {
-  width: 238px; padding: 6px 10px;
+  width: 230px; padding: 6px 10px;
   background: var(--bg-card); border: 1px solid var(--border);
   border-radius: 8px; color: var(--text); font-size: 12px;
   font-family: 'SF Mono', 'Cascadia Code', monospace; outline: none;
@@ -199,19 +152,17 @@ body {
 .apikey-input:focus { border-color: var(--accent); }
 .apikey-input::placeholder { color: var(--text-4); }
 
-/* ============================================================
-   TAB BAR
-   ============================================================ */
+/* ── TAB BAR ── */
 .tabbar {
   height: var(--tabbar); flex-shrink: 0;
   display: flex; align-items: stretch;
-  padding: 0 20px; background: #080808;
-  border-bottom: 1px solid var(--border); gap: 0;
+  padding: 0 18px; background: #080808;
+  border-bottom: 1px solid var(--border);
 }
 
 .tab-btn {
   display: flex; align-items: center; gap: 6px;
-  padding: 0 14px; font-size: 13px; font-weight: 500;
+  padding: 0 13px; font-size: 13px; font-weight: 500;
   color: var(--text-3); cursor: pointer; border: none; background: none;
   border-bottom: 2px solid transparent; margin-bottom: -1px;
   transition: all 0.15s; white-space: nowrap;
@@ -219,155 +170,31 @@ body {
 .tab-btn:hover { color: var(--text-2); }
 .tab-btn.active { color: var(--text); border-bottom-color: var(--accent); }
 
-/* ============================================================
-   TAB PANELS
-   ============================================================ */
+/* ── TAB PANELS ── */
 .tab-panels { flex: 1; overflow: hidden; position: relative; display: flex; }
 
 .panel {
   display: none; flex: 1; overflow: hidden;
   width: 100%; position: absolute; inset: 0;
 }
-.panel.active { display: flex; }
+.panel.active { display: flex; flex-direction: column; }
 
-/* ============================================================
-   GENERATION PANEL (LEFT SIDEBAR)
-   ============================================================ */
-.gen-panel {
-  width: 316px; min-width: 316px; height: 100%;
-  overflow-y: auto; background: #080808;
-  border-right: 1px solid var(--border);
-  display: flex; flex-direction: column;
-}
-
-.gen-inner { padding: 18px; display: flex; flex-direction: column; gap: 15px; }
-
-.field-label {
-  font-size: 10px; font-weight: 700; text-transform: uppercase;
-  letter-spacing: 0.9px; color: var(--text-4); display: block;
-  margin-bottom: 6px;
-}
-
-.prompt-box {
-  width: 100%; min-height: 110px; padding: 11px 12px;
-  background: var(--bg-card); border: 1px solid var(--border);
-  border-radius: 10px; color: var(--text); font-size: 13px;
-  line-height: 1.55; resize: vertical; outline: none;
-  font-family: inherit; transition: border-color 0.15s;
-}
-.prompt-box:focus { border-color: var(--accent); }
-.prompt-box::placeholder { color: var(--text-4); }
-
-.char-hint { font-size: 10px; color: var(--text-4); text-align: right; margin-top: 4px; }
-
-.seg-buttons { display: flex; gap: 6px; }
-.seg-btn {
-  flex: 1; padding: 8px 4px; background: var(--bg-card);
-  border: 1px solid var(--border); border-radius: 8px;
-  color: var(--text-3); font-size: 12px; cursor: pointer;
-  text-align: center; font-weight: 600; transition: all 0.15s;
-}
-.seg-btn:hover { border-color: var(--border-2); color: var(--text-2); }
-.seg-btn.active { background: var(--accent-dim); border-color: var(--accent); color: var(--text); }
-
-.aspect-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; }
-.aspect-btn {
-  padding: 8px 4px; background: var(--bg-card);
-  border: 1px solid var(--border); border-radius: 8px;
-  color: var(--text-3); font-size: 10px; cursor: pointer;
-  text-align: center; font-weight: 600; transition: all 0.15s;
-  display: flex; flex-direction: column; align-items: center; gap: 5px;
-}
-.aspect-btn:hover { border-color: var(--border-2); color: var(--text-2); }
-.aspect-btn.active { background: var(--accent-dim); border-color: var(--accent); color: var(--text); }
-
-.aspect-box-wrap { height: 18px; display: flex; align-items: center; justify-content: center; }
-.aspect-box {
-  background: var(--text-4); border-radius: 2px; transition: background 0.15s;
-}
-.aspect-btn.active .aspect-box { background: var(--accent); }
-
-.upload-drop {
-  border: 2px dashed var(--border); border-radius: 10px;
-  padding: 18px 12px; text-align: center; cursor: pointer;
-  color: var(--text-3); font-size: 12px; transition: all 0.15s;
-  position: relative;
-}
-.upload-drop:hover { border-color: var(--accent); color: var(--text-2); }
-.upload-drop input {
-  position: absolute; inset: 0; opacity: 0;
-  cursor: pointer; width: 100%; height: 100%;
-}
-
-.ref-preview-wrap { position: relative; display: none; }
-.ref-preview-wrap.has-img { display: block; }
-.ref-preview-img {
-  width: 100%; max-height: 112px; object-fit: cover;
-  border-radius: 8px; border: 1px solid var(--border);
-}
-.ref-remove {
-  position: absolute; top: 5px; right: 5px;
-  width: 22px; height: 22px; background: rgba(0,0,0,0.75);
-  border: 1px solid rgba(255,255,255,0.08); border-radius: 5px;
-  color: var(--text); font-size: 11px; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  transition: background 0.15s;
-}
-.ref-remove:hover { background: rgba(239,68,68,0.6); }
-
-.cost-row {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 9px 12px; background: rgba(99,102,241,0.06);
-  border: 1px solid rgba(99,102,241,0.14); border-radius: 8px;
-  font-size: 12px;
-}
-.cost-lbl { color: var(--text-3); }
-.cost-val { font-weight: 700; color: var(--accent); font-size: 11px; }
-
-.gen-btn {
-  width: 100%; padding: 13px; background: var(--accent);
-  border: none; border-radius: 10px; color: #fff;
-  font-size: 14px; font-weight: 700; cursor: pointer;
-  transition: all 0.18s; position: relative; overflow: hidden;
-  letter-spacing: 0.2px;
-}
-.gen-btn:hover:not(:disabled) {
-  background: var(--accent-hover);
-  transform: translateY(-1px);
-  box-shadow: 0 8px 28px rgba(99,102,241,0.35);
-}
-.gen-btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
-.gen-btn.loading::after {
-  content: '';
-  position: absolute; inset: 0;
-  background: linear-gradient(90deg,transparent 0%,rgba(255,255,255,0.1) 50%,transparent 100%);
-  animation: shimmer 1.4s ease infinite;
-}
-@keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
-}
-
-/* ============================================================
-   MEDIA AREA
-   ============================================================ */
+/* ── MEDIA AREA ── */
 .media-area {
-  flex: 1; overflow-y: auto; padding: 18px;
-  background: var(--bg); min-width: 0;
+  flex: 1; overflow-y: auto; padding: 16px 16px calc(var(--bottombar) + 40px);
+  background: var(--bg);
 }
 
 .media-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
 }
 
-/* ============================================================
-   MEDIA CARD
-   ============================================================ */
+/* ── MEDIA CARD ── */
 .mcard {
   background: var(--bg-card); border: 1px solid var(--border);
-  border-radius: 12px; overflow: hidden; transition: all 0.2s;
+  border-radius: 12px; overflow: hidden; transition: all 0.18s;
   position: relative; cursor: default;
 }
 .mcard:hover { border-color: var(--border-2); transform: translateY(-2px); box-shadow: 0 10px 36px rgba(0,0,0,0.5); }
@@ -375,70 +202,68 @@ body {
 .mcard-thumb { width: 100%; display: block; object-fit: cover; background: #0d0d0d; }
 .mcard-thumb.r11  { aspect-ratio: 1/1; }
 .mcard-thumb.r169 { aspect-ratio: 16/9; }
-.mcard-thumb.r916 { aspect-ratio: 9/16; max-height: 400px; }
+.mcard-thumb.r916 { aspect-ratio: 9/16; max-height: 420px; }
 .mcard-thumb.r43  { aspect-ratio: 4/3; }
 
 .mcard-video { width: 100%; display: block; background: #000; aspect-ratio: 16/9; }
 
 .mcard-loading {
   width: 100%; display: flex; flex-direction: column;
-  align-items: center; justify-content: center; gap: 12px;
+  align-items: center; justify-content: center; gap: 10px;
   background: linear-gradient(135deg, #0f0f0f 0%, #141414 100%);
-  padding: 28px 20px;
+  padding: 24px 16px;
 }
 .mcard-loading.r11  { aspect-ratio: 1/1; }
 .mcard-loading.r169 { aspect-ratio: 16/9; }
-.mcard-loading.r916 { aspect-ratio: 9/16; min-height: 200px; max-height: 400px; }
+.mcard-loading.r916 { aspect-ratio: 9/16; min-height: 180px; max-height: 420px; }
 .mcard-loading.r43  { aspect-ratio: 4/3; }
 
 .spinner {
-  width: 34px; height: 34px;
-  border: 3px solid var(--border); border-top-color: var(--accent);
+  width: 30px; height: 30px;
+  border: 2.5px solid var(--border); border-top-color: var(--accent);
   border-radius: 50%; animation: spin 0.75s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-.load-text { font-size: 12px; color: var(--text-3); text-align: center; line-height: 1.5; }
+.load-text { font-size: 11px; color: var(--text-3); text-align: center; line-height: 1.5; }
 
-.progress-wrap { width: 80%; height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.progress-wrap { width: 76%; height: 2px; background: var(--border); border-radius: 2px; overflow: hidden; }
 .progress-bar { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.4s ease; }
 
 .mcard-err {
   width: 100%; display: flex; flex-direction: column;
-  align-items: center; justify-content: center; gap: 10px;
-  padding: 28px 20px; aspect-ratio: 1/1;
+  align-items: center; justify-content: center; gap: 9px;
+  padding: 24px 16px; aspect-ratio: 1/1;
   background: rgba(239,68,68,0.04);
 }
 .mcard-err.r169 { aspect-ratio: 16/9; }
-.mcard-err.r916 { aspect-ratio: 9/16; min-height: 200px; max-height: 400px; }
+.mcard-err.r916 { aspect-ratio: 9/16; min-height: 180px; max-height: 420px; }
 .mcard-err.r43  { aspect-ratio: 4/3; }
 
-.err-icon { font-size: 26px; }
+.err-icon { font-size: 24px; }
 .err-msg { font-size: 11px; color: #f87171; text-align: center; line-height: 1.5; max-width: 200px; }
 .retry-btn {
-  padding: 6px 14px; border: 1px solid rgba(239,68,68,0.3);
+  padding: 5px 12px; border: 1px solid rgba(239,68,68,0.3);
   background: rgba(239,68,68,0.08); border-radius: 6px;
   color: #f87171; font-size: 11px; cursor: pointer; transition: all 0.15s;
 }
 .retry-btn:hover { background: rgba(239,68,68,0.18); }
 
-.mcard-info { padding: 9px 11px; display: flex; flex-direction: column; gap: 5px; }
+.mcard-info { padding: 8px 10px; display: flex; flex-direction: column; gap: 4px; }
 .mcard-prompt {
   font-size: 12px; color: var(--text-2);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.mcard-meta {
-  display: flex; align-items: center; justify-content: space-between; gap: 6px;
-}
+.mcard-meta { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
 .mcard-model {
   font-size: 10px; color: var(--text-3); background: var(--border);
-  padding: 2px 6px; border-radius: 4px; max-width: 58%; overflow: hidden;
+  padding: 2px 6px; border-radius: 4px; max-width: 56%; overflow: hidden;
   text-overflow: ellipsis; white-space: nowrap;
 }
 .mcard-cost {
   font-size: 10px; font-weight: 700; color: var(--accent);
   background: var(--accent-dim); border: 1px solid var(--accent-border);
-  padding: 2px 7px; border-radius: 4px; white-space: nowrap;
+  padding: 2px 6px; border-radius: 4px; white-space: nowrap;
 }
 .mcard-time { font-size: 10px; color: var(--text-4); }
 
@@ -456,51 +281,139 @@ body {
 }
 .mcard-act-btn:hover { background: rgba(99,102,241,0.55); border-color: var(--accent); }
 
-/* ============================================================
-   EMPTY STATE
-   ============================================================ */
+/* ── EMPTY STATE ── */
 .empty {
   display: flex; flex-direction: column; align-items: center;
-  justify-content: center; gap: 12px; width: 100%; min-height: 340px;
+  justify-content: center; gap: 12px; width: 100%; min-height: 320px;
   color: var(--text-3); text-align: center; padding: 40px;
 }
-.empty-ico { font-size: 44px; opacity: 0.25; }
+.empty-ico { font-size: 40px; opacity: 0.22; }
 .empty-ttl { font-size: 15px; font-weight: 600; color: var(--text-2); }
 .empty-sub { font-size: 13px; max-width: 260px; line-height: 1.6; }
 
-/* ============================================================
-   HISTORY PANEL
-   ============================================================ */
-.history-wrap {
-  flex: 1; display: flex; flex-direction: column; overflow: hidden; width: 100%;
-}
+/* ── HISTORY ── */
 .history-hdr {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 14px 20px; border-bottom: 1px solid var(--border);
+  padding: 13px 18px; border-bottom: 1px solid var(--border);
   flex-shrink: 0; background: #080808;
 }
 .history-ttl { font-size: 14px; font-weight: 700; }
 .clear-btn {
-  padding: 6px 12px; border: 1px solid rgba(239,68,68,0.25);
+  padding: 5px 11px; border: 1px solid rgba(239,68,68,0.25);
   background: rgba(239,68,68,0.08); border-radius: 6px;
   color: #f87171; font-size: 12px; cursor: pointer; transition: all 0.15s;
 }
 .clear-btn:hover { background: rgba(239,68,68,0.18); }
 
-/* ============================================================
-   FOOTER DISCLAIMER
-   ============================================================ */
-.footer {
-  flex-shrink: 0; padding: 7px 20px;
-  border-top: 1px solid var(--border); background: #080808;
-  font-size: 10px; color: var(--text-4); line-height: 1.5;
+/* ── BOTTOM BAR ── */
+.bottom-bar {
+  position: fixed;
+  bottom: 20px;
+  left: calc(var(--sidebar) + 20px);
+  right: 20px;
+  z-index: 200;
+  pointer-events: none;
 }
-.footer a { color: #4a4a7a; text-decoration: none; }
-.footer a:hover { color: var(--accent); }
 
-/* ============================================================
-   MODEL PICKER MODAL
-   ============================================================ */
+.bb-inner {
+  background: rgba(13,13,13,0.92);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--border-2);
+  border-radius: 14px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 8px 48px rgba(0,0,0,0.6), 0 1px 0 rgba(255,255,255,0.03) inset;
+  pointer-events: all;
+}
+
+/* Ref image button (video mode) */
+.bb-ref-btn {
+  width: 34px; height: 34px; flex-shrink: 0;
+  background: var(--bg-card); border: 1px solid var(--border-2);
+  border-radius: 9px; color: var(--text-3); font-size: 16px;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s; position: relative;
+}
+.bb-ref-btn:hover { border-color: var(--accent); color: var(--text); }
+.bb-ref-btn input {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer;
+  width: 100%; height: 100%;
+}
+.bb-ref-thumb {
+  width: 34px; height: 34px; border-radius: 8px;
+  object-fit: cover; flex-shrink: 0;
+  border: 1px solid var(--accent); cursor: pointer;
+  display: none;
+}
+.bb-ref-thumb.has-img { display: block; }
+
+/* Prompt input */
+.bb-prompt-wrap {
+  flex: 1; min-width: 0; position: relative;
+}
+.bb-prompt {
+  width: 100%; background: transparent; border: none; outline: none;
+  color: var(--text); font-size: 13.5px; font-family: inherit;
+  resize: none; line-height: 1.45;
+  max-height: 100px; overflow-y: auto;
+}
+.bb-prompt::placeholder { color: var(--text-4); }
+
+/* Divider */
+.bb-div { width: 1px; height: 24px; background: var(--border-2); flex-shrink: 0; }
+
+/* Chip controls */
+.bb-chips { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+
+.bb-chip {
+  display: flex; align-items: center; gap: 5px;
+  padding: 5px 9px; background: var(--bg-card);
+  border: 1px solid var(--border-2); border-radius: 8px;
+  color: var(--text-2); font-size: 12px; font-weight: 500;
+  cursor: pointer; white-space: nowrap; transition: all 0.15s;
+}
+.bb-chip:hover { border-color: var(--accent); color: var(--text); }
+.bb-chip svg { width: 11px; height: 11px; color: var(--text-3); }
+
+.bb-select {
+  padding: 5px 8px; background: var(--bg-card);
+  border: 1px solid var(--border-2); border-radius: 8px;
+  color: var(--text-2); font-size: 12px; font-weight: 500;
+  cursor: pointer; outline: none; transition: all 0.15s;
+  appearance: none;
+}
+.bb-select:hover, .bb-select:focus { border-color: var(--accent); color: var(--text); }
+.bb-select option { background: #1a1a1a; }
+
+/* Cost preview */
+.bb-cost {
+  font-size: 10px; color: var(--text-3);
+  white-space: nowrap; flex-shrink: 0;
+}
+.bb-cost span { color: var(--accent); font-weight: 600; }
+
+/* Generate button */
+.bb-gen {
+  padding: 8px 18px; background: var(--accent);
+  border: none; border-radius: 9px; color: #fff;
+  font-size: 13px; font-weight: 700; cursor: pointer;
+  white-space: nowrap; transition: all 0.18s;
+  flex-shrink: 0; letter-spacing: 0.2px;
+  position: relative; overflow: hidden;
+}
+.bb-gen:hover { background: var(--accent-hover); box-shadow: 0 4px 20px rgba(99,102,241,0.4); }
+.bb-gen.busy::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(90deg,transparent,rgba(255,255,255,0.1),transparent);
+  animation: shimmer 1.4s ease infinite;
+}
+@keyframes shimmer { 0%{transform:translateX(-100%)} 100%{transform:translateX(100%)} }
+
+/* ── MODEL PICKER MODAL ── */
 .overlay {
   position: fixed; inset: 0; z-index: 900;
   background: rgba(0,0,0,0.72); backdrop-filter: blur(5px);
@@ -509,21 +422,20 @@ body {
 .overlay.open { display: flex; }
 
 .modal {
-  background: var(--bg-modal); border: 1px solid var(--border);
+  background: var(--bg-modal); border: 1px solid var(--border-2);
   border-radius: 16px; width: 820px; max-width: calc(100vw - 40px);
   max-height: calc(100vh - 60px); display: flex; flex-direction: column;
   overflow: hidden; box-shadow: 0 32px 80px rgba(0,0,0,0.65);
-  animation: modalIn 0.2s ease;
+  animation: modalIn 0.18s ease;
 }
 @keyframes modalIn {
-  from { opacity: 0; transform: scale(0.96) translateY(8px); }
-  to   { opacity: 1; transform: scale(1)    translateY(0);    }
+  from { opacity:0; transform:scale(0.96) translateY(8px); }
+  to   { opacity:1; transform:scale(1)    translateY(0);   }
 }
 
 .modal-hdr {
-  padding: 18px 22px; border-bottom: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: space-between;
-  flex-shrink: 0;
+  padding: 17px 22px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
 }
 .modal-ttl { font-size: 15px; font-weight: 700; }
 .modal-close {
@@ -538,8 +450,8 @@ body {
   display: flex; padding: 0 22px; border-bottom: 1px solid var(--border); flex-shrink: 0;
 }
 .modal-tab {
-  padding: 11px 14px; font-size: 13px; font-weight: 500;
-  color: var(--text-4); cursor: pointer; border-bottom: 2px solid transparent;
+  padding: 10px 14px; font-size: 13px; font-weight: 500;
+  color: var(--text-3); cursor: pointer; border-bottom: 2px solid transparent;
   transition: all 0.15s; margin-bottom: -1px;
 }
 .modal-tab:hover { color: var(--text-2); }
@@ -551,8 +463,7 @@ body {
 
 .mcard-pick {
   background: var(--bg-card); border: 1px solid var(--border);
-  border-radius: 11px; padding: 13px; cursor: pointer;
-  transition: all 0.15s; position: relative;
+  border-radius: 11px; padding: 13px; cursor: pointer; transition: all 0.15s;
 }
 .mcard-pick:hover { border-color: var(--border-2); background: var(--bg-hover); }
 .mcard-pick.selected { border-color: var(--accent); background: var(--accent-dim); }
@@ -568,10 +479,18 @@ body {
   font-size: 9px; padding: 2px 6px; border-radius: 4px;
   font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; white-space: nowrap;
 }
-.b-best  { background: rgba(34,197,94,0.12);  color: #4ade80; border: 1px solid rgba(34,197,94,0.2); }
-.b-top   { background: rgba(245,158,11,0.12); color: #fbbf24; border: 1px solid rgba(245,158,11,0.2); }
-.b-prev  { background: rgba(239,68,68,0.08);  color: #f87171; border: 1px solid rgba(239,68,68,0.18); }
-.b-bana  { background: rgba(250,204,21,0.12); color: #facc15; border: 1px solid rgba(250,204,21,0.2); }
+.b-best { background: rgba(34,197,94,0.12);  color: #4ade80; border: 1px solid rgba(34,197,94,0.2); }
+.b-top  { background: rgba(245,158,11,0.12); color: #fbbf24; border: 1px solid rgba(245,158,11,0.2); }
+.b-prev { background: rgba(239,68,68,0.08);  color: #f87171; border: 1px solid rgba(239,68,68,0.18); }
+.b-bana { background: rgba(250,204,21,0.12); color: #facc15; border: 1px solid rgba(250,204,21,0.2); }
+
+.speed-chip {
+  font-size: 9px; padding: 2px 6px; border-radius: 4px;
+  font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px;
+}
+.chip-fast     { background: rgba(34,197,94,0.12);  color: #4ade80; }
+.chip-standard { background: rgba(99,102,241,0.12); color: #818cf8; }
+.chip-pro      { background: rgba(245,158,11,0.12); color: #fbbf24; }
 
 .mcard-pick-desc { font-size: 11px; color: var(--text-3); margin-bottom: 9px; line-height: 1.5; }
 
@@ -582,70 +501,64 @@ body {
 }
 .price-row:last-child { border-bottom: none; }
 .price-key { color: var(--text-3); }
-.price-val { color: var(--text-2); font-family: 'SF Mono', 'Cascadia Code', monospace; font-size: 9.5px; }
+.price-val { color: var(--text-2); font-family: 'SF Mono','Cascadia Code',monospace; font-size: 9.5px; }
 
 .preview-warn {
   display: flex; align-items: center; gap: 5px;
   margin-top: 8px; font-size: 10px; color: #fb923c;
 }
 
-/* ============================================================
-   LIGHTBOX
-   ============================================================ */
+/* ── LIGHTBOX ── */
 .lightbox {
   position: fixed; inset: 0; z-index: 800;
   background: rgba(0,0,0,0.88); backdrop-filter: blur(8px);
   display: none; align-items: center; justify-content: center;
 }
 .lightbox.open { display: flex; }
-.lightbox-img {
-  max-width: 90vw; max-height: 90vh;
-  border-radius: 10px; object-fit: contain;
-  box-shadow: 0 24px 80px rgba(0,0,0,0.7);
-}
+.lightbox-img { max-width: 90vw; max-height: 90vh; border-radius: 10px; object-fit: contain; box-shadow: 0 24px 80px rgba(0,0,0,0.7); }
 .lightbox-close {
   position: absolute; top: 18px; right: 18px;
-  width: 38px; height: 38px; background: rgba(0,0,0,0.7);
+  width: 36px; height: 36px; background: rgba(0,0,0,0.7);
   border: 1px solid rgba(255,255,255,0.1); border-radius: 9px;
-  color: var(--text); font-size: 18px; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  transition: all 0.15s;
+  color: var(--text); font-size: 16px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; transition: all 0.15s;
 }
 .lightbox-close:hover { background: rgba(255,255,255,0.12); }
 
-/* ============================================================
-   TOAST
-   ============================================================ */
+/* ── TOASTS ── */
 .toasts {
-  position: fixed; bottom: 20px; right: 20px;
+  position: fixed; bottom: 100px; right: 20px;
   z-index: 1000; display: flex; flex-direction: column;
   gap: 8px; pointer-events: none;
 }
 .toast {
   display: flex; align-items: center; gap: 9px;
-  padding: 11px 14px; background: #1c1c1c;
-  border: 1px solid var(--border); border-radius: 10px;
-  font-size: 13px; color: var(--text); max-width: 310px;
+  padding: 10px 14px; background: #1c1c1c;
+  border: 1px solid var(--border-2); border-radius: 10px;
+  font-size: 12.5px; color: var(--text); max-width: 300px;
   box-shadow: 0 8px 28px rgba(0,0,0,0.45); pointer-events: auto;
   animation: toastIn 0.2s ease;
 }
-@keyframes toastIn {
-  from { opacity: 0; transform: translateX(16px); }
-  to   { opacity: 1; transform: translateX(0); }
-}
+@keyframes toastIn { from{opacity:0;transform:translateX(14px)} to{opacity:1;transform:translateX(0)} }
 .toast.t-err  { border-color: rgba(239,68,68,0.4); }
 .toast.t-ok   { border-color: rgba(34,197,94,0.4); }
 .toast.t-warn { border-color: rgba(245,158,11,0.4); }
-.toast-ico { font-size: 15px; flex-shrink: 0; }
-.toast-txt { font-size: 12.5px; line-height: 1.4; }
+.toast-ico { font-size: 14px; flex-shrink: 0; }
+
+/* ── FOOTER ── */
+.footer {
+  position: fixed; bottom: 0; left: var(--sidebar); right: 0;
+  padding: 4px 18px; background: rgba(7,7,7,0.8);
+  border-top: 1px solid var(--border);
+  font-size: 9.5px; color: var(--text-4); z-index: 150;
+}
+.footer a { color: #444; text-decoration: none; }
+.footer a:hover { color: var(--accent); }
 </style>
 </head>
-
 <body>
 
-<!-- ============================================================
-     SIDEBAR
-     ============================================================ -->
+<!-- SIDEBAR -->
 <aside class="sidebar">
   <div class="sidebar-logo">
     <div class="logo-mark">⚡</div>
@@ -668,37 +581,27 @@ body {
     </button>
   </nav>
   <div class="sidebar-footer">
-    <button class="nav-btn" onclick="showToast('Open index.html in your browser — no server needed!','info')">
-      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-      About
+    <button class="nav-btn" onclick="openPicker()">
+      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="2" y="3" width="6" height="6" rx="1"/><rect x="2" y="15" width="6" height="6" rx="1"/><rect x="10" y="3" width="6" height="6" rx="1"/><rect x="10" y="15" width="6" height="6" rx="1"/><rect x="18" y="3" width="4" height="6" rx="1"/><rect x="18" y="15" width="4" height="6" rx="1"/></svg>
+      Models
     </button>
   </div>
 </aside>
 
-<!-- ============================================================
-     MAIN
-     ============================================================ -->
+<!-- MAIN -->
 <div class="main">
 
   <!-- TOPBAR -->
   <header class="topbar">
-    <button class="model-pill" onclick="openPicker()" id="model-pill-btn">
-      <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="2" y="3" width="6" height="6" rx="1"/><rect x="2" y="15" width="6" height="6" rx="1"/><rect x="10" y="3" width="6" height="6" rx="1"/><rect x="10" y="15" width="6" height="6" rx="1"/><rect x="18" y="3" width="4" height="6" rx="1"/><rect x="18" y="15" width="4" height="6" rx="1"/></svg>
-      <span id="topbar-model-name">Imagen 4 Standard</span>
-      <span class="speed-chip chip-standard" id="topbar-speed-chip">Standard</span>
-      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
-    </button>
+    <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-3)">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l2 2"/></svg>
+      Each Generate click queues one generation · Cmd+Enter to generate
+    </div>
     <div class="topbar-gap"></div>
     <div class="apikey-wrap">
       <div class="apikey-dot" id="apikey-dot"></div>
-      <input
-        type="password"
-        class="apikey-input"
-        id="apikey-input"
-        placeholder="Enter Google AI Studio API key…"
-        autocomplete="off"
-        spellcheck="false"
-      />
+      <input type="password" class="apikey-input" id="apikey-input"
+        placeholder="Google AI Studio API key…" autocomplete="off" spellcheck="false"/>
     </div>
   </header>
 
@@ -721,162 +624,126 @@ body {
   <!-- TAB PANELS -->
   <div class="tab-panels">
 
-    <!-- ── IMAGES PANEL ── -->
+    <!-- IMAGES -->
     <div class="panel active" id="panel-images">
-      <div class="gen-panel" id="img-gen-panel">
-        <div class="gen-inner">
-          <!-- Prompt -->
-          <div>
-            <label class="field-label">Prompt</label>
-            <textarea class="prompt-box" id="img-prompt" placeholder="Describe the image you want to create…" maxlength="2000" oninput="updateCharCount('img')"></textarea>
-            <div class="char-hint"><span id="img-chars">0</span> / 2000</div>
-          </div>
-
-          <!-- Aspect Ratio -->
-          <div>
-            <label class="field-label">Aspect Ratio</label>
-            <div class="aspect-grid" id="aspect-btns">
-              <button class="aspect-btn active" onclick="setAspect('1:1','r11')">
-                <div class="aspect-box-wrap"><div class="aspect-box" style="width:14px;height:14px"></div></div>
-                1:1
-              </button>
-              <button class="aspect-btn" onclick="setAspect('16:9','r169')">
-                <div class="aspect-box-wrap"><div class="aspect-box" style="width:18px;height:10px"></div></div>
-                16:9
-              </button>
-              <button class="aspect-btn" onclick="setAspect('9:16','r916')">
-                <div class="aspect-box-wrap"><div class="aspect-box" style="width:10px;height:18px"></div></div>
-                9:16
-              </button>
-              <button class="aspect-btn" onclick="setAspect('4:3','r43')">
-                <div class="aspect-box-wrap"><div class="aspect-box" style="width:16px;height:12px"></div></div>
-                4:3
-              </button>
-            </div>
-          </div>
-
-          <!-- Cost Preview -->
-          <div class="cost-row">
-            <span class="cost-lbl">Estimated cost</span>
-            <span class="cost-val" id="img-cost-preview">~$0.04 USD / ~$0.06 AUD</span>
-          </div>
-
-          <!-- Generate -->
-          <button class="gen-btn" id="img-gen-btn" onclick="doGenImages()">
-            ✦ Generate Images
-          </button>
-        </div>
-      </div>
-
       <div class="media-area" id="img-media-area">
         <div class="media-grid" id="img-grid"></div>
         <div class="empty" id="img-empty">
           <div class="empty-ico">🎨</div>
           <div class="empty-ttl">No images yet</div>
-          <div class="empty-sub">Enter a prompt, choose options, and click Generate to create images</div>
+          <div class="empty-sub">Type a prompt in the bar below and click Generate</div>
         </div>
       </div>
     </div>
 
-    <!-- ── VIDEOS PANEL ── -->
+    <!-- VIDEOS -->
     <div class="panel" id="panel-videos">
-      <div class="gen-panel" id="vid-gen-panel">
-        <div class="gen-inner">
-          <!-- Prompt -->
-          <div>
-            <label class="field-label">Prompt</label>
-            <textarea class="prompt-box" id="vid-prompt" placeholder="Describe the video scene you want to create…" maxlength="2000" oninput="updateCharCount('vid')"></textarea>
-            <div class="char-hint"><span id="vid-chars">0</span> / 2000</div>
-          </div>
-
-          <!-- Reference Image -->
-          <div>
-            <label class="field-label">Reference Image (optional)</label>
-            <div class="ref-preview-wrap" id="ref-preview-wrap">
-              <img class="ref-preview-img" id="ref-preview-img" src="" alt="Reference">
-              <button class="ref-remove" onclick="removeRefImg()">✕</button>
-            </div>
-            <div class="upload-drop" id="upload-drop">
-              <input type="file" accept="image/*" onchange="handleRefUpload(event)" id="ref-file-input">
-              📎 Click or drag an image here
-            </div>
-          </div>
-
-          <!-- Duration -->
-          <div>
-            <label class="field-label">Duration</label>
-            <div class="seg-buttons" id="dur-btns">
-              <button class="seg-btn" onclick="setDuration(5)">5s</button>
-              <button class="seg-btn active" onclick="setDuration(8)">8s</button>
-              <button class="seg-btn" onclick="setDuration(15)">15s</button>
-            </div>
-          </div>
-
-          <!-- Resolution -->
-          <div>
-            <label class="field-label">Resolution</label>
-            <div class="seg-buttons" id="res-btns">
-              <button class="seg-btn" onclick="setResolution('720p')">720p</button>
-              <button class="seg-btn active" onclick="setResolution('1080p')">1080p</button>
-            </div>
-          </div>
-
-          <!-- Cost Preview -->
-          <div class="cost-row">
-            <span class="cost-lbl">Estimated cost</span>
-            <span class="cost-val" id="vid-cost-preview">~$2.80 USD / ~$4.42 AUD</span>
-          </div>
-
-          <!-- Generate -->
-          <button class="gen-btn" id="vid-gen-btn" onclick="doGenVideo()">
-            ▶ Generate Video
-          </button>
-        </div>
-      </div>
-
       <div class="media-area" id="vid-media-area">
         <div class="media-grid" id="vid-grid"></div>
         <div class="empty" id="vid-empty">
           <div class="empty-ico">🎬</div>
           <div class="empty-ttl">No videos yet</div>
-          <div class="empty-sub">Enter a prompt and click Generate to create your first video</div>
+          <div class="empty-sub">Type a prompt in the bar below and click Generate</div>
         </div>
       </div>
     </div>
 
-    <!-- ── HISTORY PANEL ── -->
+    <!-- HISTORY -->
     <div class="panel" id="panel-history">
-      <div class="history-wrap">
-        <div class="history-hdr">
-          <span class="history-ttl">Generation History</span>
-          <button class="clear-btn" onclick="clearHistory()">Clear All</button>
-        </div>
-        <div class="media-area">
-          <div class="media-grid" id="hist-grid"></div>
-          <div class="empty" id="hist-empty">
-            <div class="empty-ico">📚</div>
-            <div class="empty-ttl">No history yet</div>
-            <div class="empty-sub">Your generated images and videos will be saved here automatically</div>
-          </div>
+      <div class="history-hdr">
+        <span class="history-ttl">Generation History</span>
+        <button class="clear-btn" onclick="clearHistory()">Clear All</button>
+      </div>
+      <div class="media-area">
+        <div class="media-grid" id="hist-grid"></div>
+        <div class="empty" id="hist-empty">
+          <div class="empty-ico">📚</div>
+          <div class="empty-ttl">No history yet</div>
+          <div class="empty-sub">Completed generations are saved here automatically</div>
         </div>
       </div>
     </div>
 
-  </div><!-- end tab-panels -->
+  </div><!-- /tab-panels -->
 
-  <!-- FOOTER -->
-  <div class="footer">
-    Prices sourced from <a href="https://ai.google.dev/gemini-api/docs/pricing" target="_blank">ai.google.dev/gemini-api/docs/pricing</a> ·
-    AUD conversion approximate (1 USD ≈ 1.58 AUD) ·
-    Verify before production use ·
-    Some model IDs may be preview/experimental — check availability at ai.google.dev
+  <!-- BOTTOM BAR -->
+  <div class="bottom-bar" id="bottom-bar">
+    <div class="bb-inner">
+
+      <!-- Ref image (video only, hidden on images tab) -->
+      <div id="bb-ref-wrap" style="display:none">
+        <img class="bb-ref-thumb" id="bb-ref-thumb" src="" alt="Reference" title="Click to remove" onclick="removeRefImg()">
+        <button class="bb-ref-btn" id="bb-ref-btn" title="Add reference image">
+          <input type="file" accept="image/*" onchange="handleRefUpload(event)" id="bb-ref-input">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        </button>
+      </div>
+
+      <!-- Prompt -->
+      <div class="bb-prompt-wrap">
+        <textarea class="bb-prompt" id="bb-prompt" rows="1"
+          placeholder="Describe what you want to create…"
+          oninput="autoResize(this); updateCostPreview()"
+          onkeydown="promptKeydown(event)"></textarea>
+      </div>
+
+      <div class="bb-div"></div>
+
+      <!-- Controls -->
+      <div class="bb-chips">
+        <!-- Model selector -->
+        <button class="bb-chip" onclick="openPicker()" id="bb-model-chip">
+          <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="2" y="3" width="6" height="6" rx="1"/><rect x="2" y="15" width="6" height="6" rx="1"/><rect x="10" y="3" width="6" height="6" rx="1"/><rect x="10" y="15" width="6" height="6" rx="1"/><rect x="18" y="3" width="4" height="6" rx="1"/><rect x="18" y="15" width="4" height="6" rx="1"/></svg>
+          <span id="bb-model-name">Imagen 4 Standard</span>
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+
+        <!-- Image options -->
+        <div id="bb-img-opts" style="display:flex;align-items:center;gap:6px">
+          <select class="bb-select" id="bb-aspect" onchange="setAspect(this.value)" title="Aspect ratio">
+            <option value="1:1|r11">1:1</option>
+            <option value="16:9|r169">16:9</option>
+            <option value="9:16|r916">9:16</option>
+            <option value="4:3|r43">4:3</option>
+          </select>
+        </div>
+
+        <!-- Video options -->
+        <div id="bb-vid-opts" style="display:none;align-items:center;gap:6px">
+          <select class="bb-select" id="bb-duration" onchange="setDuration(Number(this.value))" title="Duration">
+            <option value="5">5s</option>
+            <option value="8" selected>8s</option>
+            <option value="15">15s</option>
+          </select>
+          <select class="bb-select" id="bb-resolution" onchange="setResolution(this.value)" title="Resolution">
+            <option value="720p">720p</option>
+            <option value="1080p" selected>1080p</option>
+          </select>
+        </div>
+
+        <!-- Cost preview -->
+        <div class="bb-cost">Est. <span id="bb-cost-val">~$0.04 USD</span></div>
+      </div>
+
+      <div class="bb-div"></div>
+
+      <!-- Generate -->
+      <button class="bb-gen" id="bb-gen-btn" onclick="handleGenerate()">
+        Generate
+      </button>
+
+    </div>
   </div>
 
-</div><!-- end .main -->
+</div><!-- /main -->
 
-<!-- ============================================================
-     MODEL PICKER MODAL
-     ============================================================ -->
+<!-- FOOTER -->
+<div class="footer">
+  Prices from <a href="https://ai.google.dev/gemini-api/docs/pricing" target="_blank">ai.google.dev/gemini-api/docs/pricing</a> ·
+  AUD conversion approximate (1 USD ≈ 1.58 AUD) · Verify before production use
+</div>
+
+<!-- MODEL PICKER -->
 <div class="overlay" id="picker-overlay" onclick="overlayClick(event)">
   <div class="modal">
     <div class="modal-hdr">
@@ -894,140 +761,42 @@ body {
   </div>
 </div>
 
-<!-- ============================================================
-     LIGHTBOX
-     ============================================================ -->
+<!-- LIGHTBOX -->
 <div class="lightbox" id="lightbox" onclick="closeLightbox()">
   <img class="lightbox-img" id="lightbox-img" src="" alt="">
   <button class="lightbox-close">✕</button>
 </div>
 
-<!-- ============================================================
-     TOASTS
-     ============================================================ -->
+<!-- TOASTS -->
 <div class="toasts" id="toasts"></div>
 
-<!-- ============================================================
-     JAVASCRIPT
-     ============================================================ -->
 <script>
-/* ============================================================
-   CONSTANTS & MODEL DEFINITIONS
-   ============================================================ */
+/* ─── CONSTANTS ─── */
 const USD_TO_AUD = 1.58;
 const MAX_HISTORY = 50;
 const POLL_MS = 3000;
-const MAX_POLL_MS = 360000; // 6 min
+const MAX_POLL_MS = 360000;
 
 const IMAGE_MODELS = [
-  {
-    id: 'imagen-4.0-generate-001',
-    name: 'Imagen 4 Standard',
-    desc: 'Best quality Imagen model with balanced speed for everyday use',
-    speed: 'standard',
-    pricePerImageUSD: 0.04,
-    apiType: 'imagen',
-    badges: [],
-  },
-  {
-    id: 'imagen-4.0-ultra-generate-001',
-    name: 'Imagen 4 Ultra',
-    desc: 'Highest quality output, ideal for professional and detailed imagery',
-    speed: 'pro',
-    pricePerImageUSD: 0.06,
-    apiType: 'imagen',
-    badges: ['highest-quality'],
-  },
-  {
-    id: 'imagen-4.0-fast-generate-001',
-    name: 'Imagen 4 Fast',
-    desc: 'Budget-friendly rapid generation for iteration and drafts',
-    speed: 'fast',
-    pricePerImageUSD: 0.02,
-    apiType: 'imagen',
-    badges: ['best-value'],
-  },
-  {
-    id: 'nano-banana-2',
-    name: 'Nano Banana 2',
-    emoji: '🍌',
-    desc: 'Token-based native Gemini image gen. 1K image ≈ 1120 output tokens (~$60/1M)',
-    speed: 'standard',
-    pricePerImageUSD: 0.067,
-    inputPriceUSD: 0.0011,
-    apiType: 'gemini',
-    badges: ['banana'],
-    tokenBased: true,
-  },
-  {
-    id: 'nano-banana-pro',
-    name: 'Nano Banana Pro',
-    emoji: '🍌',
-    desc: 'Premium token-based model for complex prompts and high detail',
-    speed: 'pro',
-    pricePerImageUSD: 0.067,
-    inputPriceUSD: 0.0011,
-    apiType: 'gemini',
-    badges: ['banana'],
-    tokenBased: true,
-  },
-  {
-    id: 'gemini-3.1-flash-image',
-    name: 'Gemini 3.1 Flash Image',
-    desc: 'Fast native generation with resolution-tiered pricing (512px–4K)',
-    speed: 'fast',
-    pricePerImageUSD: 0.067,
-    inputPriceUSD: 0.0011,
-    apiType: 'gemini',
-    badges: [],
-    resolutionTiered: true,
-    resPricing: { '512px': 0.045, '1K': 0.067, '2K': 0.101, '4K': 0.151 },
-  },
+  { id:'imagen-4.0-generate-001',      name:'Imagen 4 Standard', desc:'Best quality, balanced speed for everyday use', speed:'standard', pricePerImageUSD:0.04,  apiType:'imagen', badges:[] },
+  { id:'imagen-4.0-ultra-generate-001',name:'Imagen 4 Ultra',    desc:'Highest quality output, ideal for professional imagery', speed:'pro', pricePerImageUSD:0.06, apiType:'imagen', badges:['highest-quality'] },
+  { id:'imagen-4.0-fast-generate-001', name:'Imagen 4 Fast',     desc:'Budget-friendly rapid generation for iteration', speed:'fast', pricePerImageUSD:0.02, apiType:'imagen', badges:['best-value'] },
+  { id:'nano-banana-2',  name:'Nano Banana 2',  emoji:'🍌', desc:'Token-based native Gemini image gen (1K img ≈ 1120 output tokens)', speed:'standard', pricePerImageUSD:0.067, inputPriceUSD:0.0011, apiType:'gemini', badges:['banana'], tokenBased:true },
+  { id:'nano-banana-pro',name:'Nano Banana Pro',emoji:'🍌', desc:'Premium token-based model for complex, detailed prompts', speed:'pro', pricePerImageUSD:0.067, inputPriceUSD:0.0011, apiType:'gemini', badges:['banana'], tokenBased:true },
+  { id:'gemini-3.1-flash-image',name:'Gemini 3.1 Flash Image', desc:'Fast native generation with resolution-tiered pricing (512px–4K)', speed:'fast', pricePerImageUSD:0.067, inputPriceUSD:0.0011, apiType:'gemini', badges:[], resolutionTiered:true, resPricing:{'512px':0.045,'1K':0.067,'2K':0.101,'4K':0.151} },
 ];
 
 const VIDEO_MODELS = [
-  {
-    id: 'veo-3.1-generate-preview',
-    name: 'Veo 3.1 Standard',
-    desc: 'Best cinematic quality with native audio generation',
-    speed: 'pro',
-    pricePerSecUSD: 0.35,
-    apiType: 'veo',
-    badges: ['highest-quality', 'preview'],
-  },
-  {
-    id: 'veo-3.1-fast-generate-preview',
-    name: 'Veo 3.1 Fast',
-    desc: 'Speed-optimised while maintaining excellent visual quality',
-    speed: 'fast',
-    pricePerSecUSD: 0.20,
-    apiType: 'veo',
-    badges: ['preview'],
-  },
-  {
-    id: 'veo-3.1-lite-generate-preview',
-    name: 'Veo 3.1 Lite',
-    desc: 'Lowest cost option, great for drafts and rapid prototyping',
-    speed: 'fast',
-    pricePerSecUSD: 0.10,
-    apiType: 'veo',
-    badges: ['best-value', 'preview'],
-  },
-  {
-    id: 'veo-2.0-generate-001',
-    name: 'Veo 2 (Stable)',
-    desc: 'Production-ready stable model with consistent, reliable output',
-    speed: 'standard',
-    pricePerSecUSD: 0.35,
-    apiType: 'veo',
-    badges: [],
-  },
+  { id:'veo-3.1-generate-preview',      name:'Veo 3.1 Standard', desc:'Best cinematic quality with native audio generation', speed:'pro',      pricePerSecUSD:0.35, apiType:'veo', badges:['highest-quality','preview'] },
+  { id:'veo-3.1-fast-generate-preview', name:'Veo 3.1 Fast',     desc:'Speed-optimised while maintaining excellent quality', speed:'fast',     pricePerSecUSD:0.20, apiType:'veo', badges:['preview'] },
+  { id:'veo-3.1-lite-generate-preview', name:'Veo 3.1 Lite',     desc:'Lowest cost option, great for drafts and prototyping', speed:'fast',    pricePerSecUSD:0.10, apiType:'veo', badges:['best-value','preview'] },
+  { id:'veo-2.0-generate-001',          name:'Veo 2 (Stable)',   desc:'Production-ready stable model with consistent output', speed:'standard', pricePerSecUSD:0.35, apiType:'veo', badges:[] },
 ];
 
-/* ============================================================
-   STATE
-   ============================================================ */
+/* ─── STATE ─── */
 let cardId = 0;
+let activeCount = 0;
+
 const S = {
   tab: 'images',
   modelPickerTab: 'image',
@@ -1042,46 +811,33 @@ const S = {
   history: [],
 };
 
-/* ============================================================
-   INIT
-   ============================================================ */
+/* ─── INIT ─── */
 function init() {
-  // Load API key
   S.apiKey = localStorage.getItem('hgs_apikey') || '';
   const inp = document.getElementById('apikey-input');
   if (S.apiKey) inp.value = S.apiKey;
   updateApiDot();
-
   inp.addEventListener('input', () => {
     S.apiKey = inp.value.trim();
     localStorage.setItem('hgs_apikey', S.apiKey);
     updateApiDot();
   });
 
-  // Load history
   try { S.history = JSON.parse(localStorage.getItem('hgs_history') || '[]'); } catch(e) { S.history = []; }
 
-  // Render model grids
   renderModelGrid('image');
   renderModelGrid('video');
-
-  // Initial cost previews
-  updateImgCostPreview();
-  updateVidCostPreview();
-  updateTopbarModel();
+  updateBottomBar();
+  updateCostPreview();
 }
 
 function updateApiDot() {
   const dot = document.getElementById('apikey-dot');
   if (!S.apiKey) { dot.className = 'apikey-dot'; return; }
-  // Heuristic: Google AI Studio keys are 39 chars starting with AI
-  const looks = S.apiKey.length > 20;
-  dot.className = 'apikey-dot ' + (looks ? 'ok' : 'bad');
+  dot.className = 'apikey-dot ' + (S.apiKey.length > 20 ? 'ok' : 'bad');
 }
 
-/* ============================================================
-   TAB SWITCHING
-   ============================================================ */
+/* ─── TAB SWITCHING ─── */
 function switchTab(tab) {
   S.tab = tab;
   ['images','videos','history'].forEach(t => {
@@ -1090,25 +846,68 @@ function switchTab(tab) {
     document.getElementById('nav-' + t).classList.toggle('active', t === tab);
   });
   if (tab === 'history') renderHistory();
+  updateBottomBar();   // ← fixes the model selector not updating on tab switch
+  updateCostPreview();
 }
 
-/* ============================================================
-   MODEL PICKER
-   ============================================================ */
+/* ─── BOTTOM BAR ─── */
+function updateBottomBar() {
+  const isVid = S.tab === 'videos';
+  const isHist = S.tab === 'history';
+
+  // Show/hide video-specific controls
+  document.getElementById('bb-ref-wrap').style.display    = isVid ? 'flex' : 'none';
+  document.getElementById('bb-img-opts').style.display    = (!isVid && !isHist) ? 'flex' : 'none';
+  document.getElementById('bb-vid-opts').style.display    = isVid ? 'flex' : 'none';
+
+  // Hide entire bottom bar on history tab
+  document.getElementById('bottom-bar').style.display     = isHist ? 'none' : 'block';
+
+  // Update model chip to show the right model
+  const model = isVid
+    ? VIDEO_MODELS.find(m => m.id === S.selVidModel)
+    : IMAGE_MODELS.find(m => m.id === S.selImgModel);
+  if (model) {
+    const displayName = model.emoji ? `${model.name} ${model.emoji}` : model.name;
+    document.getElementById('bb-model-name').textContent = displayName;
+  }
+
+  updateGenBtn();
+}
+
+function updateGenBtn() {
+  const btn = document.getElementById('bb-gen-btn');
+  if (!btn) return;
+  const isVid = S.tab === 'videos';
+  const icon = isVid ? '▶ ' : '✦ ';
+  btn.textContent = activeCount > 0
+    ? `${icon}Generate  +${activeCount}`
+    : `${icon}Generate`;
+  btn.classList.toggle('busy', activeCount > 0);
+}
+
+function updateCostPreview() {
+  const el = document.getElementById('bb-cost-val');
+  if (!el) return;
+  if (S.tab === 'videos') {
+    const m = VIDEO_MODELS.find(x => x.id === S.selVidModel);
+    if (!m) return;
+    const usd = m.pricePerSecUSD * S.vidDuration;
+    el.textContent = `~$${usd.toFixed(2)} USD / ~$${(usd * USD_TO_AUD).toFixed(2)} AUD`;
+  } else {
+    const m = IMAGE_MODELS.find(x => x.id === S.selImgModel);
+    if (!m) return;
+    el.textContent = `~$${m.pricePerImageUSD.toFixed(3)} USD / ~$${(m.pricePerImageUSD * USD_TO_AUD).toFixed(3)} AUD`;
+  }
+}
+
+/* ─── MODEL PICKER ─── */
 function openPicker() {
-  // Pre-select tab based on active content tab
-  const mt = (S.tab === 'videos') ? 'video' : 'image';
-  switchModelTab(mt);
+  switchModelTab(S.tab === 'videos' ? 'video' : 'image');
   document.getElementById('picker-overlay').classList.add('open');
 }
-
-function closePicker() {
-  document.getElementById('picker-overlay').classList.remove('open');
-}
-
-function overlayClick(e) {
-  if (e.target === document.getElementById('picker-overlay')) closePicker();
-}
+function closePicker() { document.getElementById('picker-overlay').classList.remove('open'); }
+function overlayClick(e) { if (e.target === document.getElementById('picker-overlay')) closePicker(); }
 
 function switchModelTab(tab) {
   S.modelPickerTab = tab;
@@ -1120,194 +919,144 @@ function switchModelTab(tab) {
 
 function renderModelGrid(type) {
   const models = type === 'image' ? IMAGE_MODELS : VIDEO_MODELS;
-  const container = document.getElementById('mgrid-' + type);
-  container.innerHTML = models.map(m => modelCardHTML(m, type)).join('');
+  document.getElementById('mgrid-' + type).innerHTML = models.map(m => modelCardHTML(m, type)).join('');
 }
 
 function modelCardHTML(m, type) {
   const selected = type === 'image' ? S.selImgModel === m.id : S.selVidModel === m.id;
-  const cls = selected ? 'mcard-pick selected' : 'mcard-pick';
+  let badges = speedBadge(m.speed);
+  if (m.badges.includes('best-value'))      badges += '<span class="badge b-best">Best Value</span>';
+  if (m.badges.includes('highest-quality')) badges += '<span class="badge b-top">Highest Quality</span>';
+  if (m.badges.includes('preview'))         badges += '<span class="badge b-prev">Preview</span>';
+  if (m.badges.includes('banana'))          badges += '<span class="badge b-bana">🍌 Banana</span>';
 
-  // Badges
-  let badgesHTML = speedBadge(m.speed);
-  if (m.badges.includes('best-value'))     badgesHTML += '<span class="badge b-best">Best Value</span>';
-  if (m.badges.includes('highest-quality')) badgesHTML += '<span class="badge b-top">Highest Quality</span>';
-  if (m.badges.includes('preview'))         badgesHTML += '<span class="badge b-prev">Preview</span>';
-  if (m.badges.includes('banana'))          badgesHTML += '<span class="badge b-bana">🍌 Banana</span>';
-
-  // Pricing table
-  let pricingHTML = '';
+  let pricing = '';
   if (type === 'image') {
     const outAUD = (m.pricePerImageUSD * USD_TO_AUD).toFixed(3);
     if (m.tokenBased) {
-      pricingHTML = `
-        <div class="price-tbl">
-          <div class="price-row"><span class="price-key">Input (text prompt)</span><span class="price-val">~$${m.inputPriceUSD.toFixed(4)} USD / ~$${(m.inputPriceUSD*USD_TO_AUD).toFixed(4)} AUD</span></div>
-          <div class="price-row"><span class="price-key">Output (1K image ≈ 1120 tokens)</span><span class="price-val">~$${m.pricePerImageUSD.toFixed(3)} USD / ~$${outAUD} AUD</span></div>
-          <div class="price-row"><span class="price-key">Token rate</span><span class="price-val">$60 / 1M output tokens</span></div>
-        </div>`;
+      pricing = `<div class="price-tbl">
+        <div class="price-row"><span class="price-key">Input (text prompt)</span><span class="price-val">~$${m.inputPriceUSD.toFixed(4)} USD / ~$${(m.inputPriceUSD*USD_TO_AUD).toFixed(4)} AUD</span></div>
+        <div class="price-row"><span class="price-key">Output (1K image ≈ 1120 tokens)</span><span class="price-val">~$${m.pricePerImageUSD.toFixed(3)} USD / ~$${outAUD} AUD</span></div>
+        <div class="price-row"><span class="price-key">Token rate</span><span class="price-val">$60 / 1M output tokens</span></div>
+      </div>`;
     } else if (m.resolutionTiered) {
       const rp = m.resPricing;
-      pricingHTML = `
-        <div class="price-tbl">
-          <div class="price-row"><span class="price-key">Input</span><span class="price-val">~$${m.inputPriceUSD.toFixed(4)} USD per image</span></div>
-          <div class="price-row"><span class="price-key">512px output</span><span class="price-val">~$${rp['512px'].toFixed(3)} USD / ~$${(rp['512px']*USD_TO_AUD).toFixed(3)} AUD</span></div>
-          <div class="price-row"><span class="price-key">1K output</span><span class="price-val">~$${rp['1K'].toFixed(3)} USD / ~$${(rp['1K']*USD_TO_AUD).toFixed(3)} AUD</span></div>
-          <div class="price-row"><span class="price-key">2K output</span><span class="price-val">~$${rp['2K'].toFixed(3)} USD / ~$${(rp['2K']*USD_TO_AUD).toFixed(3)} AUD</span></div>
-          <div class="price-row"><span class="price-key">4K output</span><span class="price-val">~$${rp['4K'].toFixed(3)} USD / ~$${(rp['4K']*USD_TO_AUD).toFixed(3)} AUD</span></div>
-        </div>`;
+      pricing = `<div class="price-tbl">
+        <div class="price-row"><span class="price-key">Input</span><span class="price-val">~$${m.inputPriceUSD.toFixed(4)} USD per image</span></div>
+        ${Object.entries(rp).map(([k,v])=>`<div class="price-row"><span class="price-key">${k} output</span><span class="price-val">~$${v.toFixed(3)} / ~$${(v*USD_TO_AUD).toFixed(3)} AUD</span></div>`).join('')}
+      </div>`;
     } else {
-      pricingHTML = `
-        <div class="price-tbl">
-          <div class="price-row"><span class="price-key">Input</span><span class="price-val">Flat per-image (no input token cost)</span></div>
-          <div class="price-row"><span class="price-key">Output per image</span><span class="price-val">$${m.pricePerImageUSD.toFixed(2)} USD / $${outAUD} AUD</span></div>
-        </div>`;
+      pricing = `<div class="price-tbl">
+        <div class="price-row"><span class="price-key">Input</span><span class="price-val">Flat per-image (no input token cost)</span></div>
+        <div class="price-row"><span class="price-key">Output per image</span><span class="price-val">$${m.pricePerImageUSD.toFixed(2)} USD / $${outAUD} AUD</span></div>
+      </div>`;
     }
   } else {
-    const perSecAUD = (m.pricePerSecUSD * USD_TO_AUD).toFixed(3);
-    pricingHTML = `
-      <div class="price-tbl">
-        <div class="price-row"><span class="price-key">Cost per second</span><span class="price-val">$${m.pricePerSecUSD.toFixed(2)} USD / $${perSecAUD} AUD</span></div>
-        <div class="price-row"><span class="price-key">8s clip estimate</span><span class="price-val">~$${(m.pricePerSecUSD*8).toFixed(2)} USD / ~$${(m.pricePerSecUSD*8*USD_TO_AUD).toFixed(2)} AUD</span></div>
-      </div>`;
+    const secAUD = (m.pricePerSecUSD * USD_TO_AUD).toFixed(3);
+    pricing = `<div class="price-tbl">
+      <div class="price-row"><span class="price-key">Per second</span><span class="price-val">$${m.pricePerSecUSD.toFixed(2)} USD / $${secAUD} AUD</span></div>
+      <div class="price-row"><span class="price-key">8s estimate</span><span class="price-val">~$${(m.pricePerSecUSD*8).toFixed(2)} USD / ~$${(m.pricePerSecUSD*8*USD_TO_AUD).toFixed(2)} AUD</span></div>
+    </div>`;
   }
 
-  const previewWarn = m.badges.includes('preview')
-    ? `<div class="preview-warn">⚠ Preview model — may change or have lower rate limits</div>`
-    : '';
+  const warn = m.badges.includes('preview')
+    ? `<div class="preview-warn">⚠ Preview model — may change or have lower rate limits</div>` : '';
 
   const displayName = m.emoji ? `${m.name} ${m.emoji}` : m.name;
 
-  return `<div class="${cls}" id="mpick-${m.id.replace(/[^a-z0-9]/gi,'-')}" onclick="selectModel('${m.id}','${type}')">
+  return `<div class="${selected ? 'mcard-pick selected' : 'mcard-pick'}" onclick="selectModel('${m.id}','${type}')">
     <div class="mcard-pick-hdr">
       <div class="mcard-pick-name">${displayName}</div>
-      <div class="mcard-badges">${badgesHTML}</div>
+      <div class="mcard-badges">${badges}</div>
     </div>
     <div class="mcard-pick-desc">${m.desc}</div>
-    ${pricingHTML}
-    ${previewWarn}
+    ${pricing}${warn}
   </div>`;
 }
 
-function speedBadge(speed) {
-  const map = { fast: 'chip-fast', standard: 'chip-standard', pro: 'chip-pro' };
-  const label = { fast: 'Fast', standard: 'Standard', pro: 'Pro' };
-  return `<span class="speed-chip ${map[speed]||'chip-standard'}">${label[speed]||speed}</span>`;
+function speedBadge(s) {
+  const cls = {fast:'chip-fast',standard:'chip-standard',pro:'chip-pro'}[s]||'chip-standard';
+  const lbl = {fast:'Fast',standard:'Standard',pro:'Pro'}[s]||s;
+  return `<span class="speed-chip ${cls}">${lbl}</span>`;
 }
 
 function selectModel(id, type) {
-  if (type === 'image') {
-    S.selImgModel = id;
-    updateImgCostPreview();
-  } else {
-    S.selVidModel = id;
-    updateVidCostPreview();
-  }
+  if (type === 'image') S.selImgModel = id;
+  else                  S.selVidModel = id;
   renderModelGrid(type);
-  updateTopbarModel();
+  updateBottomBar();
+  updateCostPreview();
   closePicker();
 }
 
-function updateTopbarModel() {
-  const isVid = S.tab === 'videos';
-  const model = isVid
-    ? VIDEO_MODELS.find(m => m.id === S.selVidModel)
-    : IMAGE_MODELS.find(m => m.id === S.selImgModel);
-  if (!model) return;
-
-  const displayName = model.emoji ? `${model.name} ${model.emoji}` : model.name;
-  document.getElementById('topbar-model-name').textContent = displayName;
-
-  const chip = document.getElementById('topbar-speed-chip');
-  const map = { fast: 'chip-fast', standard: 'chip-standard', pro: 'chip-pro' };
-  const label = { fast: 'Fast', standard: 'Standard', pro: 'Pro' };
-  chip.className = 'speed-chip ' + (map[model.speed] || 'chip-standard');
-  chip.textContent = label[model.speed] || model.speed;
-}
-
-/* ============================================================
-   IMAGE GENERATION OPTIONS
-   ============================================================ */
-function updateCharCount(which) {
-  const el = document.getElementById(which + '-prompt');
-  document.getElementById(which + '-chars').textContent = el.value.length;
-}
-
-function setAspect(ratio, cls) {
+/* ─── ASPECT / DURATION / RESOLUTION ─── */
+function setAspect(val) {
+  const [ratio, cls] = val.split('|');
   S.aspectRatio = ratio;
   S.aspectClass = cls;
-  document.querySelectorAll('#aspect-btns .aspect-btn').forEach(b => {
-    b.classList.toggle('active', b.getAttribute('onclick').includes("'" + ratio + "'"));
-  });
 }
 
-function updateImgCostPreview() {
-  const m = IMAGE_MODELS.find(x => x.id === S.selImgModel);
-  if (!m) return;
-  const usd = m.pricePerImageUSD;
-  const aud = usd * USD_TO_AUD;
-  document.getElementById('img-cost-preview').textContent =
-    `~$${usd.toFixed(3)} USD / ~$${aud.toFixed(3)} AUD`;
-}
-
-/* ============================================================
-   VIDEO GENERATION OPTIONS
-   ============================================================ */
 function setDuration(s) {
   S.vidDuration = s;
-  document.querySelectorAll('#dur-btns .seg-btn').forEach(b => {
-    b.classList.toggle('active', b.textContent.trim() === s + 's');
-  });
-  updateVidCostPreview();
+  updateCostPreview();
 }
 
-function setResolution(r) {
-  S.vidResolution = r;
-  document.querySelectorAll('#res-btns .seg-btn').forEach(b => {
-    b.classList.toggle('active', b.textContent.trim() === r);
-  });
-}
+function setResolution(r) { S.vidResolution = r; }
 
-function updateVidCostPreview() {
-  const m = VIDEO_MODELS.find(x => x.id === S.selVidModel);
-  if (!m) return;
-  const usd = m.pricePerSecUSD * S.vidDuration;
-  const aud = usd * USD_TO_AUD;
-  document.getElementById('vid-cost-preview').textContent =
-    `~$${usd.toFixed(2)} USD / ~$${aud.toFixed(2)} AUD`;
-}
-
+/* ─── REF IMAGE ─── */
 function handleRefUpload(e) {
   const file = e.target.files[0];
   if (!file) return;
   const reader = new FileReader();
   reader.onload = ev => {
     S.refImgBase64 = ev.target.result;
-    document.getElementById('ref-preview-img').src = S.refImgBase64;
-    document.getElementById('ref-preview-wrap').classList.add('has-img');
-    document.getElementById('upload-drop').style.display = 'none';
+    const thumb = document.getElementById('bb-ref-thumb');
+    thumb.src = S.refImgBase64;
+    thumb.classList.add('has-img');
+    document.getElementById('bb-ref-btn').style.display = 'none';
   };
   reader.readAsDataURL(file);
 }
 
 function removeRefImg() {
   S.refImgBase64 = null;
-  document.getElementById('ref-preview-wrap').classList.remove('has-img');
-  document.getElementById('upload-drop').style.display = '';
-  document.getElementById('ref-file-input').value = '';
+  const thumb = document.getElementById('bb-ref-thumb');
+  thumb.src = ''; thumb.classList.remove('has-img');
+  document.getElementById('bb-ref-btn').style.display = 'flex';
+  document.getElementById('bb-ref-input').value = '';
 }
 
-/* ============================================================
-   IMAGE GENERATION
-   ============================================================ */
-function doGenImages() {
-  const prompt = document.getElementById('img-prompt').value.trim();
-  if (!prompt) { showToast('Please enter a prompt', 'error'); return; }
-  if (!S.apiKey) { showToast('Please enter your Google AI Studio API key', 'error'); return; }
+/* ─── PROMPT HELPERS ─── */
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 100) + 'px';
+}
+
+function promptKeydown(e) {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+    e.preventDefault();
+    handleGenerate();
+  }
+}
+
+/* ─── GENERATE DISPATCHER ─── */
+function handleGenerate() {
+  if (S.tab === 'images') doGenImage();
+  else if (S.tab === 'videos') doGenVideo();
+}
+
+/* ─── IMAGE GENERATION ─── */
+function doGenImage() {
+  const prompt = document.getElementById('bb-prompt').value.trim();
+  if (!prompt)    { showToast('Please enter a prompt', 'error'); return; }
+  if (!S.apiKey)  { showToast('Please enter your API key', 'error'); return; }
 
   const cid = ++cardId;
   prependLoadingCard('img-grid', cid, S.aspectClass);
   updateEmptyState('img');
+
+  activeCount++;
+  updateGenBtn();
 
   const model = IMAGE_MODELS.find(m => m.id === S.selImgModel);
   const t0 = Date.now();
@@ -1317,65 +1066,54 @@ function doGenImages() {
       const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
       const costAUD = (model.pricePerImageUSD * USD_TO_AUD).toFixed(4);
       fillCardSuccess('img-grid', cid, dataUrl, prompt, model, costAUD, elapsed, S.aspectClass);
-      saveHistory({ type: 'image', dataUrl, prompt, model: model.name, costAUD, ts: Date.now() });
+      saveHistory({ type:'image', dataUrl, prompt, model:model.name, costAUD, ts:Date.now() });
     })
     .catch(err => fillCardError('img-grid', cid, err.message, S.aspectClass,
-      () => retryImage(cid, prompt, S.selImgModel, S.aspectRatio, S.apiKey, model, S.aspectClass)));
+      () => retryImage(cid, prompt, S.selImgModel, S.aspectRatio, S.apiKey, model, S.aspectClass)))
+    .finally(() => {
+      activeCount = Math.max(0, activeCount - 1);
+      updateGenBtn();
+    });
 }
 
 async function retryImage(cid, prompt, modelId, aspect, apiKey, model, aspectClass) {
   setCardLoading('img-grid', cid, aspectClass);
+  activeCount++;
+  updateGenBtn();
   const t0 = Date.now();
   try {
     const dataUrl = await callImageAPI(prompt, modelId, aspect, apiKey);
     const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
     const costAUD = (model.pricePerImageUSD * USD_TO_AUD).toFixed(4);
     fillCardSuccess('img-grid', cid, dataUrl, prompt, model, costAUD, elapsed, aspectClass);
-    saveHistory({ type: 'image', dataUrl, prompt, model: model.name, costAUD, ts: Date.now() });
+    saveHistory({ type:'image', dataUrl, prompt, model:model.name, costAUD, ts:Date.now() });
   } catch(e) {
     fillCardError('img-grid', cid, e.message, aspectClass,
       () => retryImage(cid, prompt, modelId, aspect, apiKey, model, aspectClass));
+  } finally {
+    activeCount = Math.max(0, activeCount - 1);
+    updateGenBtn();
   }
 }
 
 async function callImageAPI(prompt, modelId, aspectRatio, apiKey) {
   const m = IMAGE_MODELS.find(x => x.id === modelId);
-
   if (m.apiType === 'imagen') {
     const res = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:predict?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          instances: [{ prompt }],
-          parameters: {
-            sampleCount: 1,
-            aspectRatio,
-            safetySetting: 'block_low_and_above',
-          },
-        }),
-      }
+      { method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ instances:[{prompt}], parameters:{ sampleCount:1, aspectRatio, safetySetting:'block_low_and_above' } }) }
     );
     await throwIfError(res);
     const data = await res.json();
     const pred = data.predictions?.[0];
     if (!pred) throw new Error('No image returned from API');
-    const mime = pred.mimeType || 'image/jpeg';
-    return `data:${mime};base64,${pred.bytesBase64Encoded}`;
-
+    return `data:${pred.mimeType||'image/jpeg'};base64,${pred.bytesBase64Encoded}`;
   } else {
-    // Gemini native image generation
     const res = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ role: 'user', parts: [{ text: prompt }] }],
-          generationConfig: { responseModalities: ['IMAGE', 'TEXT'] },
-        }),
-      }
+      { method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ contents:[{role:'user',parts:[{text:prompt}]}], generationConfig:{responseModalities:['IMAGE','TEXT']} }) }
     );
     await throwIfError(res);
     const data = await res.json();
@@ -1386,52 +1124,43 @@ async function callImageAPI(prompt, modelId, aspectRatio, apiKey) {
   }
 }
 
-/* ============================================================
-   VIDEO GENERATION
-   ============================================================ */
+/* ─── VIDEO GENERATION ─── */
 async function doGenVideo() {
-  const prompt = document.getElementById('vid-prompt').value.trim();
-  if (!prompt) { showToast('Please enter a prompt', 'error'); return; }
-  if (!S.apiKey) { showToast('Please enter your Google AI Studio API key', 'error'); return; }
-
-  const btn = document.getElementById('vid-gen-btn');
-  btn.disabled = true;
-  btn.classList.add('loading');
-  btn.textContent = 'Generating…';
+  const prompt = document.getElementById('bb-prompt').value.trim();
+  if (!prompt)   { showToast('Please enter a prompt', 'error'); return; }
+  if (!S.apiKey) { showToast('Please enter your API key', 'error'); return; }
 
   const cid = ++cardId;
   prependLoadingCard('vid-grid', cid, 'r169', true);
   updateEmptyState('vid');
+
+  activeCount++;
+  updateGenBtn();
 
   const model = VIDEO_MODELS.find(m => m.id === S.selVidModel);
   const t0 = Date.now();
 
   try {
     const dataUrl = await callVideoAPI(
-      prompt, S.selVidModel, S.vidDuration, S.vidResolution,
-      S.refImgBase64, S.apiKey,
+      prompt, S.selVidModel, S.vidDuration, S.vidResolution, S.refImgBase64, S.apiKey,
       (elapsed, max) => {
         const pct = Math.min(90, (elapsed / max) * 100);
         const bar = document.getElementById('pbar-' + cid);
         const txt = document.getElementById('ltxt-' + cid);
         if (bar) bar.style.width = pct + '%';
-        if (txt) txt.textContent = `Generating… ${Math.round(elapsed/1000)}s elapsed`;
+        if (txt) txt.textContent = `Generating… ${Math.round(elapsed/1000)}s`;
       }
     );
     const secs = ((Date.now() - t0) / 1000).toFixed(1);
     const costAUD = (model.pricePerSecUSD * S.vidDuration * USD_TO_AUD).toFixed(3);
     fillCardSuccessVideo('vid-grid', cid, dataUrl, prompt, model, costAUD, secs);
-    saveHistory({ type: 'video', dataUrl, prompt, model: model.name, costAUD, ts: Date.now() });
+    saveHistory({ type:'video', dataUrl, prompt, model:model.name, costAUD, ts:Date.now() });
   } catch(e) {
-    fillCardError('vid-grid', cid, e.message, 'r169',
-      () => {
-        doGenVideo();
-      });
+    fillCardError('vid-grid', cid, e.message, 'r169', () => doGenVideo());
+  } finally {
+    activeCount = Math.max(0, activeCount - 1);
+    updateGenBtn();
   }
-
-  btn.disabled = false;
-  btn.classList.remove('loading');
-  btn.textContent = '▶ Generate Video';
 }
 
 async function callVideoAPI(prompt, modelId, duration, resolution, refImgBase64, apiKey, onProgress) {
@@ -1441,172 +1170,125 @@ async function callVideoAPI(prompt, modelId, duration, resolution, refImgBase64,
     const mime = refImgBase64.match(/^data:([^;]+);base64,/)?.[1] || 'image/jpeg';
     instance.image = { bytesBase64Encoded: b64, mimeType: mime };
   }
-
   const res = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:predictLongRunning?key=${apiKey}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        instances: [instance],
-        parameters: {
-          aspectRatio: '16:9',
-          sampleCount: 1,
-          durationSeconds: duration,
-        },
-      }),
-    }
+    { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ instances:[instance], parameters:{ aspectRatio:'16:9', sampleCount:1, durationSeconds:duration } }) }
   );
   await throwIfError(res);
-
   const startData = await res.json();
   const opName = startData.name;
-  if (!opName) throw new Error('No operation name returned — video generation may not be available for this model');
+  if (!opName) throw new Error('No operation name returned — this model may not support video generation yet');
 
-  // Poll loop
   let elapsed = 0;
   while (elapsed < MAX_POLL_MS) {
     await sleep(POLL_MS);
     elapsed += POLL_MS;
     onProgress && onProgress(elapsed, MAX_POLL_MS);
-
     let pollRes;
-    try {
-      pollRes = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/${opName}?key=${apiKey}`
-      );
-    } catch(e) { continue; }
-
+    try { pollRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/${opName}?key=${apiKey}`); }
+    catch(e) { continue; }
     if (!pollRes.ok) continue;
-
     const pollData = await pollRes.json();
     if (pollData.done) {
       if (pollData.error) throw new Error(pollData.error.message || 'Video generation failed');
-
-      // Handle all known Veo response shapes
       const resp = pollData.response || {};
-
-      // Shape 1: resp.generateVideoResponse.generatedSamples[0].video
+      // Shape 1: generateVideoResponse.generatedSamples[0].video
       const sample = resp.generateVideoResponse?.generatedSamples?.[0]?.video;
-      if (sample?.uri)               return sample.uri;
+      if (sample?.uri)                return sample.uri;
       if (sample?.bytesBase64Encoded) return `data:video/mp4;base64,${sample.bytesBase64Encoded}`;
-
-      // Shape 2: resp.predictions[0]
+      // Shape 2: predictions[0]
       const pred0 = resp.predictions?.[0] || {};
-      if (pred0.bytesBase64Encoded)  return `data:video/mp4;base64,${pred0.bytesBase64Encoded}`;
-      if (pred0.videoBytes)          return `data:video/mp4;base64,${pred0.videoBytes}`;
-      if (pred0.video?.bytesBase64Encoded) return `data:video/mp4;base64,${pred0.video.bytesBase64Encoded}`;
-      if (pred0.uri)                 return pred0.uri;
-      if (pred0.video?.uri)          return pred0.video.uri;
-
-      // Shape 3: resp.videos[0]
+      if (pred0.bytesBase64Encoded)            return `data:video/mp4;base64,${pred0.bytesBase64Encoded}`;
+      if (pred0.videoBytes)                    return `data:video/mp4;base64,${pred0.videoBytes}`;
+      if (pred0.video?.bytesBase64Encoded)     return `data:video/mp4;base64,${pred0.video.bytesBase64Encoded}`;
+      if (pred0.uri)                           return pred0.uri;
+      if (pred0.video?.uri)                    return pred0.video.uri;
+      // Shape 3: videos[0]
       const vid0 = resp.videos?.[0] || {};
-      if (vid0.bytesBase64Encoded)   return `data:video/mp4;base64,${vid0.bytesBase64Encoded}`;
-      if (vid0.uri)                  return vid0.uri;
-
-      // Unknown shape — surface the raw response to help debug
+      if (vid0.bytesBase64Encoded)             return `data:video/mp4;base64,${vid0.bytesBase64Encoded}`;
+      if (vid0.uri)                            return vid0.uri;
       console.error('Veo response (unknown shape):', JSON.stringify(pollData, null, 2));
-      throw new Error('Video completed but no data found in response. Check the browser console for the raw API response.');
+      throw new Error('Video completed but no data found. Check the browser console for the raw API response.');
     }
   }
   throw new Error('Video generation timed out after 6 minutes');
 }
 
-/* ============================================================
-   CARD MANAGEMENT
-   ============================================================ */
+/* ─── CARD MANAGEMENT ─── */
 function prependLoadingCard(gridId, cid, aspectClass, isVideo) {
   const grid = document.getElementById(gridId);
   const div = document.createElement('div');
   div.className = 'mcard';
   div.id = 'card-' + cid;
-
-  const progressHTML = isVideo
-    ? `<div class="progress-wrap"><div class="progress-bar" id="pbar-${cid}" style="width:5%"></div></div>`
-    : '';
-
   div.innerHTML = `
     <div class="mcard-loading ${aspectClass}">
       <div class="spinner"></div>
       <div class="load-text" id="ltxt-${cid}">Generating…</div>
-      ${progressHTML}
-    </div>
-  `;
+      ${isVideo ? `<div class="progress-wrap"><div class="progress-bar" id="pbar-${cid}" style="width:4%"></div></div>` : ''}
+    </div>`;
   grid.prepend(div);
 }
 
 function setCardLoading(gridId, cid, aspectClass) {
   const card = document.getElementById('card-' + cid);
   if (!card) return;
-  card.querySelector('.mcard-loading,.mcard-err,.mcard-info')?.remove?.();
   card.innerHTML = `
     <div class="mcard-loading ${aspectClass}">
       <div class="spinner"></div>
       <div class="load-text" id="ltxt-${cid}">Retrying…</div>
-    </div>
-  `;
+    </div>`;
 }
 
 function fillCardSuccess(gridId, cid, dataUrl, prompt, model, costAUD, elapsed, aspectClass) {
   const card = document.getElementById('card-' + cid);
   if (!card) return;
-
   const displayName = model.emoji ? `${model.name} ${model.emoji}` : model.name;
-  const shortPrompt = prompt.length > 60 ? prompt.slice(0, 57) + '…' : prompt;
-
+  const short = prompt.length > 60 ? prompt.slice(0,57) + '…' : prompt;
   card.innerHTML = `
     <div class="mcard-actions">
-      <button class="mcard-act-btn" title="View fullscreen" onclick="openLightbox('${escapeAttr(dataUrl)}')">⛶</button>
-      <button class="mcard-act-btn" title="Download" onclick="downloadMedia('${escapeAttr(dataUrl)}', 'image-${cid}.jpg')">↓</button>
+      <button class="mcard-act-btn" title="Fullscreen" onclick="openLightbox('${escAttr(dataUrl)}')">⛶</button>
+      <button class="mcard-act-btn" title="Download" onclick="dlMedia('${escAttr(dataUrl)}','image-${cid}.jpg')">↓</button>
     </div>
-    <img class="mcard-thumb ${aspectClass}" src="${dataUrl}" alt="${escapeAttr(prompt)}" loading="lazy" onclick="openLightbox('${escapeAttr(dataUrl)}')">
+    <img class="mcard-thumb ${aspectClass}" src="${dataUrl}" alt="${escAttr(prompt)}" loading="lazy" onclick="openLightbox('${escAttr(dataUrl)}')">
     <div class="mcard-info">
-      <div class="mcard-prompt" title="${escapeAttr(prompt)}">${escapeHTML(shortPrompt)}</div>
+      <div class="mcard-prompt" title="${escAttr(prompt)}">${escHTML(short)}</div>
       <div class="mcard-meta">
-        <span class="mcard-model" title="${escapeAttr(model.id)}">${escapeHTML(displayName)}</span>
+        <span class="mcard-model" title="${escAttr(model.id)}">${escHTML(displayName)}</span>
         <span class="mcard-cost">$${costAUD} AUD</span>
       </div>
       <div class="mcard-time">Generated in ${elapsed}s</div>
-    </div>
-  `;
+    </div>`;
 }
 
 function fillCardSuccessVideo(gridId, cid, dataUrl, prompt, model, costAUD, elapsed) {
   const card = document.getElementById('card-' + cid);
   if (!card) return;
-  const shortPrompt = prompt.length > 60 ? prompt.slice(0, 57) + '…' : prompt;
-
-  const mediaHTML = dataUrl.startsWith('data:')
-    ? `<video class="mcard-video" src="${dataUrl}" controls playsinline></video>`
-    : `<video class="mcard-video" src="${dataUrl}" controls playsinline></video>`;
-
+  const short = prompt.length > 60 ? prompt.slice(0,57) + '…' : prompt;
   card.innerHTML = `
     <div class="mcard-actions">
-      <button class="mcard-act-btn" title="Download" onclick="downloadMedia('${escapeAttr(dataUrl)}', 'video-${cid}.mp4')">↓</button>
+      <button class="mcard-act-btn" title="Download" onclick="dlMedia('${escAttr(dataUrl)}','video-${cid}.mp4')">↓</button>
     </div>
-    ${mediaHTML}
+    <video class="mcard-video" src="${dataUrl}" controls playsinline></video>
     <div class="mcard-info">
-      <div class="mcard-prompt" title="${escapeAttr(prompt)}">${escapeHTML(shortPrompt)}</div>
+      <div class="mcard-prompt" title="${escAttr(prompt)}">${escHTML(short)}</div>
       <div class="mcard-meta">
-        <span class="mcard-model" title="${escapeAttr(model.id)}">${escapeHTML(model.name)}</span>
+        <span class="mcard-model">${escHTML(model.name)}</span>
         <span class="mcard-cost">$${costAUD} AUD</span>
       </div>
       <div class="mcard-time">Generated in ${elapsed}s</div>
-    </div>
-  `;
+    </div>`;
 }
 
 function fillCardError(gridId, cid, errMsg, aspectClass, onRetry) {
   const card = document.getElementById('card-' + cid);
   if (!card) return;
-  const safeMsg = escapeHTML(errMsg || 'Unknown error');
   card.innerHTML = `
     <div class="mcard-err ${aspectClass}">
       <div class="err-icon">⚠</div>
-      <div class="err-msg">${safeMsg}</div>
+      <div class="err-msg">${escHTML(errMsg || 'Unknown error')}</div>
       <button class="retry-btn" onclick="(${onRetry.toString()})()">↻ Retry</button>
-    </div>
-  `;
+    </div>`;
 }
 
 function updateEmptyState(which) {
@@ -1615,9 +1297,7 @@ function updateEmptyState(which) {
   if (empty) empty.style.display = grid.children.length ? 'none' : 'flex';
 }
 
-/* ============================================================
-   HISTORY
-   ============================================================ */
+/* ─── HISTORY ─── */
 function saveHistory(item) {
   S.history.unshift(item);
   if (S.history.length > MAX_HISTORY) S.history = S.history.slice(0, MAX_HISTORY);
@@ -1628,161 +1308,104 @@ function renderHistory() {
   const grid = document.getElementById('hist-grid');
   const empty = document.getElementById('hist-empty');
   grid.innerHTML = '';
-
-  if (!S.history.length) {
-    empty.style.display = 'flex';
-    return;
-  }
+  if (!S.history.length) { empty.style.display = 'flex'; return; }
   empty.style.display = 'none';
-
   S.history.forEach((item, i) => {
     const div = document.createElement('div');
     div.className = 'mcard';
-
-    const shortPrompt = (item.prompt || '').length > 60
-      ? item.prompt.slice(0, 57) + '…'
-      : (item.prompt || '');
-
+    const short = (item.prompt||'').length > 60 ? item.prompt.slice(0,57)+'…' : (item.prompt||'');
     const ts = item.ts ? new Date(item.ts).toLocaleString() : '';
-
-    let mediaHTML;
-    if (item.type === 'video') {
-      mediaHTML = `<video class="mcard-video" src="${item.dataUrl}" controls playsinline style="aspect-ratio:16/9"></video>`;
-    } else {
-      mediaHTML = `<img class="mcard-thumb r11" src="${item.dataUrl}" alt="${escapeAttr(item.prompt||'')}">`;
-    }
-
+    const media = item.type === 'video'
+      ? `<video class="mcard-video" src="${item.dataUrl}" controls playsinline></video>`
+      : `<img class="mcard-thumb r11" src="${item.dataUrl}" alt="">`;
     div.innerHTML = `
       <div class="mcard-actions">
-        ${item.type === 'image' ? `<button class="mcard-act-btn" onclick="openLightbox('${escapeAttr(item.dataUrl||'')}')">⛶</button>` : ''}
-        <button class="mcard-act-btn" onclick="downloadMedia('${escapeAttr(item.dataUrl||'')}', '${item.type}-hist-${i}.${item.type === 'video' ? 'mp4' : 'jpg'}')">↓</button>
-        <button class="mcard-act-btn" style="color:#f87171" onclick="deleteHistItem(${i})">✕</button>
+        ${item.type==='image'?`<button class="mcard-act-btn" onclick="openLightbox('${escAttr(item.dataUrl||'')}')">⛶</button>`:''}
+        <button class="mcard-act-btn" onclick="dlMedia('${escAttr(item.dataUrl||'')}','${item.type}-${i}.${item.type==='video'?'mp4':'jpg'}')">↓</button>
+        <button class="mcard-act-btn" style="color:#f87171" onclick="deleteHist(${i})">✕</button>
       </div>
-      ${mediaHTML}
+      ${media}
       <div class="mcard-info">
-        <div class="mcard-prompt" title="${escapeAttr(item.prompt||'')}">${escapeHTML(shortPrompt)}</div>
+        <div class="mcard-prompt" title="${escAttr(item.prompt||'')}">${escHTML(short)}</div>
         <div class="mcard-meta">
-          <span class="mcard-model">${escapeHTML(item.model || '')}</span>
-          <span class="mcard-cost">$${item.costAUD || '?'} AUD</span>
+          <span class="mcard-model">${escHTML(item.model||'')}</span>
+          <span class="mcard-cost">$${item.costAUD||'?'} AUD</span>
         </div>
         <div class="mcard-time">${ts}</div>
-      </div>
-    `;
+      </div>`;
     grid.appendChild(div);
   });
 }
 
-function deleteHistItem(idx) {
+function deleteHist(idx) {
   S.history.splice(idx, 1);
   try { localStorage.setItem('hgs_history', JSON.stringify(S.history)); } catch(e) {}
   renderHistory();
 }
 
 function clearHistory() {
-  if (!confirm('Clear all generation history? This cannot be undone.')) return;
+  if (!confirm('Clear all history? This cannot be undone.')) return;
   S.history = [];
   localStorage.removeItem('hgs_history');
   renderHistory();
-  showToast('History cleared', 'info');
+  showToast('History cleared', 'ok');
 }
 
-/* ============================================================
-   TOASTS
-   ============================================================ */
-function showToast(msg, type = 'info') {
-  const icons = { error: '✕', ok: '✓', info: 'ℹ', warn: '⚠' };
-  const classes = { error: 't-err', ok: 't-ok', warn: 't-warn', info: '' };
-  const container = document.getElementById('toasts');
-  const el = document.createElement('div');
-  el.className = 'toast ' + (classes[type] || '');
-  el.innerHTML = `<span class="toast-ico">${icons[type] || 'ℹ'}</span><span class="toast-txt">${escapeHTML(msg)}</span>`;
-  container.appendChild(el);
-  setTimeout(() => {
-    el.style.opacity = '0';
-    el.style.transform = 'translateX(16px)';
-    el.style.transition = 'all 0.2s ease';
-    setTimeout(() => el.remove(), 220);
-  }, 4500);
-}
-
-/* ============================================================
-   LIGHTBOX
-   ============================================================ */
+/* ─── LIGHTBOX ─── */
 function openLightbox(src) {
   document.getElementById('lightbox-img').src = src;
   document.getElementById('lightbox').classList.add('open');
 }
-
 function closeLightbox() {
   document.getElementById('lightbox').classList.remove('open');
   document.getElementById('lightbox-img').src = '';
 }
 
-/* ============================================================
-   UTILITIES
-   ============================================================ */
+/* ─── TOASTS ─── */
+function showToast(msg, type='info') {
+  const icons = {error:'✕', ok:'✓', info:'ℹ', warn:'⚠'};
+  const classes = {error:'t-err', ok:'t-ok', warn:'t-warn', info:''};
+  const el = document.createElement('div');
+  el.className = 'toast ' + (classes[type]||'');
+  el.innerHTML = `<span class="toast-ico">${icons[type]||'ℹ'}</span><span>${escHTML(msg)}</span>`;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(() => {
+    el.style.cssText += 'opacity:0;transform:translateX(14px);transition:all 0.2s ease';
+    setTimeout(() => el.remove(), 220);
+  }, 4500);
+}
+
+/* ─── UTILITIES ─── */
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 async function throwIfError(res) {
   if (res.ok) return;
   let msg = `API error ${res.status}`;
-  try {
-    const j = await res.json();
-    msg = j.error?.message || msg;
-  } catch(e) {}
-
-  if (res.status === 401 || res.status === 403) {
-    showToast('Invalid API key — check your key at aistudio.google.com/apikey', 'error');
-  } else if (res.status === 429) {
-    showToast('Rate limit exceeded — wait a moment and try again', 'warn');
-  } else if (res.status === 400) {
-    showToast('Bad request: ' + msg, 'error');
-  } else {
-    showToast(msg, 'error');
-  }
+  try { const j = await res.json(); msg = j.error?.message || msg; } catch(e) {}
+  if (res.status === 401 || res.status === 403) showToast('Invalid API key — check aistudio.google.com/apikey', 'error');
+  else if (res.status === 429) showToast('Rate limit hit — wait a moment and retry', 'warn');
+  else showToast(msg, 'error');
   throw new Error(msg);
 }
 
-function escapeHTML(s) {
-  return String(s)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+function escHTML(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
-
-function escapeAttr(s) {
-  return String(s)
-    .replace(/'/g, '&#39;')
-    .replace(/"/g, '&quot;')
-    .replace(/\n/g, ' ');
+function escAttr(s) {
+  return String(s).replace(/'/g,'&#39;').replace(/"/g,'&quot;').replace(/\n/g,' ');
 }
-
-function downloadMedia(dataUrl, filename) {
+function dlMedia(dataUrl, filename) {
   if (!dataUrl) return;
   const a = document.createElement('a');
-  a.href = dataUrl;
-  a.download = filename;
-  a.click();
+  a.href = dataUrl; a.download = filename; a.click();
 }
 
-/* ============================================================
-   KEYBOARD SHORTCUTS
-   ============================================================ */
+/* ─── KEYBOARD ─── */
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') {
-    closePicker();
-    closeLightbox();
-  }
-  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-    if (S.tab === 'images') doGenImages();
-    if (S.tab === 'videos') doGenVideo();
-  }
+  if (e.key === 'Escape') { closePicker(); closeLightbox(); }
 });
 
-/* ============================================================
-   BOOT
-   ============================================================ */
+/* ─── BOOT ─── */
 init();
 </script>
 </body>
