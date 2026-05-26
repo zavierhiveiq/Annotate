@@ -1390,7 +1390,7 @@ async function callImageAPI(prompt, modelId, aspectRatio, apiKey) {
           parameters: {
             sampleCount: 1,
             aspectRatio,
-            safetySetting: 'block_only_high',
+            safetySetting: 'block_low_and_above',
           },
         }),
       }
@@ -1521,17 +1521,30 @@ async function callVideoAPI(prompt, modelId, duration, resolution, refImgBase64,
     if (pollData.done) {
       if (pollData.error) throw new Error(pollData.error.message || 'Video generation failed');
 
-      // Try several response shapes
+      // Handle all known Veo response shapes
       const resp = pollData.response || {};
-      const pred = resp.predictions?.[0] || resp.videos?.[0] || {};
-      const b64 = pred.bytesBase64Encoded || pred.videoBytes || pred.video?.bytesBase64Encoded;
-      if (b64) return `data:video/mp4;base64,${b64}`;
 
-      // URI fallback
-      const uri = pred.uri || pred.video?.uri;
-      if (uri) return uri;
+      // Shape 1: resp.generateVideoResponse.generatedSamples[0].video
+      const sample = resp.generateVideoResponse?.generatedSamples?.[0]?.video;
+      if (sample?.uri)               return sample.uri;
+      if (sample?.bytesBase64Encoded) return `data:video/mp4;base64,${sample.bytesBase64Encoded}`;
 
-      throw new Error('Video completed but no data found in response');
+      // Shape 2: resp.predictions[0]
+      const pred0 = resp.predictions?.[0] || {};
+      if (pred0.bytesBase64Encoded)  return `data:video/mp4;base64,${pred0.bytesBase64Encoded}`;
+      if (pred0.videoBytes)          return `data:video/mp4;base64,${pred0.videoBytes}`;
+      if (pred0.video?.bytesBase64Encoded) return `data:video/mp4;base64,${pred0.video.bytesBase64Encoded}`;
+      if (pred0.uri)                 return pred0.uri;
+      if (pred0.video?.uri)          return pred0.video.uri;
+
+      // Shape 3: resp.videos[0]
+      const vid0 = resp.videos?.[0] || {};
+      if (vid0.bytesBase64Encoded)   return `data:video/mp4;base64,${vid0.bytesBase64Encoded}`;
+      if (vid0.uri)                  return vid0.uri;
+
+      // Unknown shape — surface the raw response to help debug
+      console.error('Veo response (unknown shape):', JSON.stringify(pollData, null, 2));
+      throw new Error('Video completed but no data found in response. Check the browser console for the raw API response.');
     }
   }
   throw new Error('Video generation timed out after 6 minutes');
